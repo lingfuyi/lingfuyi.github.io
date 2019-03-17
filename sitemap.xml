@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://lingfuyi.github.io/404.html</loc>
+    
+    <lastmod>2019-03-17T03:13:49.211Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://lingfuyi.github.io/photos/index.html</loc>
     
     <lastmod>2019-03-16T12:12:08.637Z</lastmod>
@@ -19,13 +26,6 @@
     <loc>https://lingfuyi.github.io/categories/index.html</loc>
     
     <lastmod>2019-03-16T07:22:16.458Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://lingfuyi.github.io/404.html</loc>
-    
-    <lastmod>2019-03-16T02:56:39.450Z</lastmod>
     
   </url>
   
