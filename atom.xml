@@ -27,21 +27,7 @@
     
     <summary type="html">
     
-      &lt;h2 id=&quot;OSI参考模型&quot;&gt;&lt;a href=&quot;#OSI参考模型&quot; class=&quot;headerlink&quot; title=&quot;OSI参考模型&quot;&gt;&lt;/a&gt;&lt;span id=&quot;inline-blue&quot;&gt;OSI参考模型&lt;/span&gt;&lt;/h2&gt;&lt;p&gt;&lt;/p&gt;&lt;p id=&quot;div-border-left-red&quot;&gt;如果没有安装成功，那可能就是墙的原因。建议下载 &lt;code&gt;Node.js&lt;/code&gt; 直接安装。&lt;/p&gt;&lt;p&gt;&lt;/p&gt;
-&lt;p&gt;&lt;/p&gt;&lt;p id=&quot;div-border-top-blue&quot;&gt;关于更多基本操作和基础知识，请查阅 &lt;a href=&quot;https://hexo.io/zh-cn/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Hexo&lt;/a&gt; 与 &lt;a href=&quot;http://theme-next.iissnan.com/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;NexT&lt;/a&gt; 官方文档.&lt;/p&gt;&lt;p&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;i class=&quot;fa fa-pencil&quot;&gt;&lt;/i&gt;支持Markdown&lt;br&gt;&lt;i&gt;Hexo 支持 GitHub Flavored Markdown 的所有功能，甚至可以整合 Octopress 的大多数插件。&lt;/i&gt;&lt;/li&gt;
-&lt;li&gt;&lt;i class=&quot;fa fa-cloud-upload&quot;&gt;&lt;/i&gt;一件部署&lt;br&gt;&lt;i&gt;只需一条指令即可部署到Github Pages，或其他网站&lt;/i&gt;&lt;/li&gt;
-&lt;li&gt;&lt;i class=&quot;fa fa-cog&quot;&gt;&lt;/i&gt;丰富的插件&lt;br&gt;&lt;i&gt;Hexo 拥有强大的插件系统，安装插件可以让 Hexo 支持 Jade, CoffeeScript。&lt;/i&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;ul&gt;
-&lt;li&gt;应用层 : 所有能产生网络流量的程序&lt;/li&gt;
-&lt;li&gt;表示层 : 传输之前是否进行加密以及编码处理&lt;/li&gt;
-&lt;li&gt;会话层 : 查找木马 netstat&lt;/li&gt;
-&lt;li&gt;传输层 : 可靠以及不可靠传输,流量控制&lt;/li&gt;
-&lt;li&gt;网络层 : 最佳路径规划,规划IP地址&lt;/li&gt;
-&lt;li&gt;数据链路层 : 帧的开始以及结束,透明传输 差错检验&lt;/li&gt;
-&lt;li&gt;物理层 : 接口以及电气标准
+      &lt;h2 id=&quot;OSI参考模型&quot;&gt;&lt;a href=&quot;#OSI参考模型&quot; class=&quot;headerlink&quot; title=&quot;OSI参考模型&quot;&gt;&lt;/a&gt;&lt;span id=&quot;inline-blue&quot;&gt;OSI参考模型&lt;/span&gt;&lt;/h2&gt;&lt;p&gt;&lt;/p&gt;&lt;p id=&quot;div-border-left-red&quot;&gt;如果没有安装成功，那可能就是墙的原因。建议下载 &lt;code&gt;Node.js&lt;/code&gt; 直接安装。&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;p id=&quot;div-border-top-blue&quot;&gt;关于更多基本操作和基础知识，请查阅 &lt;a href=&quot;https://hexo.io/zh-cn/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Hexo&lt;/a&gt; 与 &lt;a href=&quot;http://theme-next.iissnan.com/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;NexT&lt;/a&gt; 官方文档.&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;i class=&quot;fa fa-pencil&quot;&gt;&lt;/i&gt;支持Markdown&lt;br&gt;&lt;i&gt;Hexo 支持 GitHub Flavored Markdown 的所有功能，甚至可以整合 Octopress 的大多数插件。&lt;/i&gt;&lt;/li&gt;&lt;li&gt;&lt;i class=&quot;fa fa-cloud-upload&quot;&gt;&lt;/i&gt;一件部署&lt;br&gt;&lt;i&gt;只需一条指令即可部署到Github Pages，或其他网站&lt;/i&gt;&lt;/li&gt;&lt;li&gt;&lt;i class=&quot;fa fa-cog&quot;&gt;&lt;/i&gt;丰富的插件&lt;br&gt;&lt;i&gt;Hexo 拥有强大的插件系统，安装插件可以让 Hexo 支持 Jade, CoffeeScript。&lt;/i&gt;&lt;/li&gt;&lt;/ul&gt;&lt;ul&gt;&lt;li&gt;应用层 : 所有能产生网络流量的程序&lt;/li&gt;&lt;li&gt;表示层 : 传输之前是否进行加密以及编码处理&lt;/li&gt;&lt;li&gt;会话层 : 查找木马 netstat&lt;/li&gt;&lt;li&gt;传输层 : 可靠以及不可靠传输,流量控制&lt;/li&gt;&lt;li&gt;网络层 : 最佳路径规划,规划IP地址&lt;/li&gt;&lt;li&gt;数据链路层 : 帧的开始以及结束,透明传输 差错检验&lt;/li&gt;&lt;li&gt;物理层 : 接口以及电气标准
     
     </summary>
     
