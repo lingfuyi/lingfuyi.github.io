@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lingfuyi.github.io/"/>
-  <updated>2019-03-17T12:15:10.740Z</updated>
+  <updated>2019-03-18T14:02:25.633Z</updated>
   <id>https://lingfuyi.github.io/</id>
   
   <author>
@@ -17,20 +17,42 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>计算机网络</title>
-    <link href="https://lingfuyi.github.io/OSI%E4%B8%83%E5%B1%82%E6%A8%A1%E5%9E%8B.html"/>
-    <id>https://lingfuyi.github.io/OSI七层模型.html</id>
-    <published>2019-02-24T13:37:38.000Z</published>
-    <updated>2019-03-17T12:15:10.740Z</updated>
+    <title>君子慎独</title>
+    <link href="https://lingfuyi.github.io/%E5%90%BE%E6%97%A5%E4%B8%89%E7%9C%81%E5%90%BE%E8%BA%AB.html"/>
+    <id>https://lingfuyi.github.io/吾日三省吾身.html</id>
+    <published>2019-03-18T13:13:55.000Z</published>
+    <updated>2019-03-18T14:02:25.633Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="OSI参考模型"><a href="#OSI参考模型" class="headerlink" title="OSI参考模型"></a><span id="inline-blue">OSI参考模型</span></h2><ul><li>应用层 : 所有能产生网络流量的程序</li><li>表示层 : 传输之前是否进行加密以及编码处理</li><li>会话层 : 查找木马 netstat</li><li>传输层 : 可靠以及不可靠传输,流量控制</li><li>网络层 : 最佳路径规划,规划IP地址</li><li>数据链路层 : 帧的开始以及结束,透明传输 差错检验</li><li>物理层 : 接口以及电气标准<h2 id="OSI参考模型对网络排错指导"><a href="#OSI参考模型对网络排错指导" class="headerlink" title="OSI参考模型对网络排错指导"></a>OSI参考模型对网络排错指导</h2></li><li>物理层故障 : 查看网线连接状态以及数据包收发情况</li><li>数据链路层故障 : MAC地址冲突 ; ADSL欠费;网速协商;计算机连接到错误的WLAN</li><li>网络层故障 : 配置了错误的IP地址;子网掩码;以及网关,没有配置正确的路由</li><li>应用层故障 : 应用程序编程问题<br>总而言之 ,排查错误需要从下往上,从简单到复杂</li></ul><h2 id="计算机网络性能"><a href="#计算机网络性能" class="headerlink" title="计算机网络性能"></a>计算机网络性能</h2><ul><li>速率 : 连接在网络上的主机在数字信道上传送<code>数据位数</code>的速率,也称data rate,或者bit rate,单位是b/s Kb/s Mb/s Gb/s</li><li>带宽 : 数字通信领域 , 数字信道能传送的最高速率 , 单位是b/s Kb/s Mb/s Gb/s</li><li>吞吐量 : 单位时间内 , 通过某个网络的最大数据量 , 单位是b/s Kb/s Mb/s Gb/s</li><li>时延 : 时延 = 发送时延 + 传输时延 + 处理时延 + 排队时延</li></ul>]]></content>
+    <content type="html"><![CDATA[<p><img src="https://raw.githubusercontent.com/lingfuyi/lingfuyi.github.io/blogback/uploadPhotos/Images/dota2A.jpg" alt></p><blockquote><p>林语堂评社会十大俗气,希望自己时时谨记</p></blockquote><blockquote class="blockquote-center"><p>腰有十文钱必振衣作响<br>每与人言必谈及贵戚<br>遇美人必急索登床<br>见到问路之人必作傲睨之态<br>与朋友相聚便喋喋高吟其酸腐诗文<br>头已花白却喜唱艳曲<br>与人交谈便借刁言以逞才；<br>借人之债时其脸如丐，被人索偿时则其态如王<br>见人常多蜜语而背地却常揭人短处</p></blockquote>]]></content>
     
     <summary type="html">
     
       
       
-        &lt;h2 id=&quot;OSI参考模型&quot;&gt;&lt;a href=&quot;#OSI参考模型&quot; class=&quot;headerlink&quot; title=&quot;OSI参考模型&quot;&gt;&lt;/a&gt;&lt;span id=&quot;inline-blue&quot;&gt;OSI参考模型&lt;/span&gt;&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;应用层 : 所有能产生网络流量
+        &lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/lingfuyi/lingfuyi.github.io/blogback/uploadPhotos/Images/dota2A.jpg&quot; alt&gt;&lt;/p&gt;&lt;blockquote&gt;&lt;p&gt;林
       
+    
+    </summary>
+    
+      <category term="个人tips" scheme="https://lingfuyi.github.io/categories/%E4%B8%AA%E4%BA%BAtips/"/>
+    
+    
+      <category term="杂感" scheme="https://lingfuyi.github.io/tags/%E6%9D%82%E6%84%9F/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>OSI七层模型</title>
+    <link href="https://lingfuyi.github.io/OSI%E4%B8%83%E5%B1%82%E6%A8%A1%E5%9E%8B.html"/>
+    <id>https://lingfuyi.github.io/OSI七层模型.html</id>
+    <published>2019-02-24T13:37:38.000Z</published>
+    <updated>2019-03-18T14:01:19.002Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="OSI参考模型"><a href="#OSI参考模型" class="headerlink" title="OSI参考模型"></a><span id="inline-blue">OSI参考模型</span></h2><p>应用层:所有能产生网络流量的程序</p><ul><li>表示层 : 传输之前是否进行加密以及编码处理</li><li>会话层 : 查找木马 netstat</li><li>传输层 : 可靠以及不可靠传输,流量控制</li><li>网络层 : 最佳路径规划,规划IP地址</li><li>数据链路层 : 帧的开始以及结束,透明传输 差错检验</li><li>物理层 : 接口以及电气标准<a id="more"></a><h2 id="OSI参考模型对网络排错指导"><a href="#OSI参考模型对网络排错指导" class="headerlink" title="OSI参考模型对网络排错指导"></a>OSI参考模型对网络排错指导</h2></li><li>物理层故障 : 查看网线连接状态以及数据包收发情况</li><li>数据链路层故障 : MAC地址冲突 ; ADSL欠费;网速协商;计算机连接到错误的WLAN</li><li>网络层故障 : 配置了错误的IP地址;子网掩码;以及网关,没有配置正确的路由</li><li>应用层故障 : 应用程序编程问题<br>总而言之 ,排查错误需要从下往上,从简单到复杂</li></ul><h2 id="计算机网络性能"><a href="#计算机网络性能" class="headerlink" title="计算机网络性能"></a>计算机网络性能</h2><ul><li>速率 : 连接在网络上的主机在数字信道上传送<code>数据位数</code>的速率,也称data rate,或者bit rate,单位是b/s Kb/s Mb/s Gb/s</li><li>带宽 : 数字通信领域 , 数字信道能传送的最高速率 , 单位是b/s Kb/s Mb/s Gb/s</li><li>吞吐量 : 单位时间内 , 通过某个网络的最大数据量 , 单位是b/s Kb/s Mb/s Gb/s</li><li>时延 : 时延 = 发送时延 + 传输时延 + 处理时延 + 排队时延</li></ul>]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;OSI参考模型&quot;&gt;&lt;a href=&quot;#OSI参考模型&quot; class=&quot;headerlink&quot; title=&quot;OSI参考模型&quot;&gt;&lt;/a&gt;&lt;span id=&quot;inline-blue&quot;&gt;OSI参考模型&lt;/span&gt;&lt;/h2&gt;&lt;p&gt;应用层:所有能产生网络流量的程序&lt;/p&gt;&lt;ul&gt;&lt;li&gt;表示层 : 传输之前是否进行加密以及编码处理&lt;/li&gt;&lt;li&gt;会话层 : 查找木马 netstat&lt;/li&gt;&lt;li&gt;传输层 : 可靠以及不可靠传输,流量控制&lt;/li&gt;&lt;li&gt;网络层 : 最佳路径规划,规划IP地址&lt;/li&gt;&lt;li&gt;数据链路层 : 帧的开始以及结束,透明传输 差错检验&lt;/li&gt;&lt;li&gt;物理层 : 接口以及电气标准
     
     </summary>
     
