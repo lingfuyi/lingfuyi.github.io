@@ -97,14 +97,14 @@ menu:
   相册: /photos/ || image
   #tags: /tags/ || tags
   #categories: /categories/ || th
-  #archives: /archives/ || archive
+  archives: /archives/ || archive
   #schedule: /schedule/ || calendar
   #sitemap: /sitemap.xml || sitemap
   commonweal: /404/ || heartbeat
 
 # Enable/Disable menu icons.
 menu_icons:
-  enable: true
+  enable: false
 
 
 # ---------------------------------------------------------------
@@ -457,7 +457,7 @@ needmoreshare2:
   float:
     enable: true
     options:
-      iconStyle: box
+      iconStyle: default
       boxForm: horizontal
       position: middleRight
       networks: Weibo,Wechat,Douban,QQZone,Twitter,Facebook
