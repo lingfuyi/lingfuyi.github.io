@@ -1,0 +1,456 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>rCore chapter1 应用程序与基本环境 | 凌福义's Blog</title><meta name="author" content="凌福义"><meta name="copyright" content="凌福义"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="rCore chapter1 应用程序与基本环境参考文档： 第一章:应用程序与基本执行环境 - rCore-Tutorial-Guide-2025S 文档 1 理论知识梳理1.1 应用程序执行环境 应用程序执行环境栈 上图是从官方文档中摘取的， 操作系统 承接了 硬件平台 和各种编程语言标准库中的 系统调用 , 裸机程序就是没有操作系统的程序, 因此我们实现的程序需要绕过标准库直接和硬件打交道,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rCore chapter1 应用程序与基本环境">
+<meta property="og:url" content="http://example.com/posts/undefined/index.html">
+<meta property="og:site_name" content="凌福义&#39;s Blog">
+<meta property="og:description" content="rCore chapter1 应用程序与基本环境参考文档： 第一章:应用程序与基本执行环境 - rCore-Tutorial-Guide-2025S 文档 1 理论知识梳理1.1 应用程序执行环境 应用程序执行环境栈 上图是从官方文档中摘取的， 操作系统 承接了 硬件平台 和各种编程语言标准库中的 系统调用 , 裸机程序就是没有操作系统的程序, 因此我们实现的程序需要绕过标准库直接和硬件打交道,">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/images_20250411165145.png">
+<meta property="article:published_time" content="2025-04-03T08:51:24.000Z">
+<meta property="article:modified_time" content="2025-04-11T08:52:08.026Z">
+<meta property="article:author" content="凌福义">
+<meta property="article:tag" content="rcore">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/images_20250411165145.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "rCore chapter1 应用程序与基本环境",
+  "url": "http://example.com/posts/undefined/",
+  "image": "http://example.com/img/images_20250411165145.png",
+  "datePublished": "2025-04-03T08:51:24.000Z",
+  "dateModified": "2025-04-11T08:52:08.026Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "凌福义",
+      "url": "http://example.com/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/posts/undefined/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?140fc20037f71e13c6ad453a010848bd";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: true,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'rCore chapter1 应用程序与基本环境',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="https://cdn.staticfile.org/lxgw-wenkai-screen-webfont/1.7.0/style.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">4</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/weread"><i class="fa-fw fas fa-book"></i><span> 微信读书</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 个人笔记</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/photos/"><i class="fa-fw fas fa-images"></i><span> 照片集</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">凌福义's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">rCore chapter1 应用程序与基本环境</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/weread"><i class="fa-fw fas fa-book"></i><span> 微信读书</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 个人笔记</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/photos/"><i class="fa-fw fas fa-images"></i><span> 照片集</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">rCore chapter1 应用程序与基本环境</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-04-03T08:51:24.000Z" title="发表于 2025-04-03 16:51:24">2025-04-03</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-04-11T08:52:08.026Z" title="更新于 2025-04-11 16:52:08">2025-04-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%85%E5%8D%8E%E5%A4%A7%E5%AD%A62025-rcore%E8%AE%AD%E7%BB%83%E8%90%A5/">清华大学2025-rcore训练营</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">4.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>14分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="rCore-chapter1-应用程序与基本环境"><a href="#rCore-chapter1-应用程序与基本环境" class="headerlink" title="rCore chapter1 应用程序与基本环境"></a>rCore chapter1 应用程序与基本环境</h1><p>参考文档： <a target="_blank" rel="noopener" href="https://learningos.cn/rCore-Tutorial-Guide-2025S/chapter1/index.html">第一章:应用程序与基本执行环境 - rCore-Tutorial-Guide-2025S 文档</a></p>
+<h2 id="1-理论知识梳理"><a href="#1-理论知识梳理" class="headerlink" title="1 理论知识梳理"></a>1 理论知识梳理</h2><h2 id="1-1-应用程序执行环境"><a href="#1-1-应用程序执行环境" class="headerlink" title="1.1 应用程序执行环境"></a>1.1 应用程序执行环境</h2><p><img src="/img/HAFPbjyXnoeQBvxPok3cpn67n1b.png"></p>
+<p>应用程序执行环境栈</p>
+<p>上图是从官方文档中摘取的， <code>操作系统</code> 承接了 <code>硬件平台</code> 和各种编程语言标准库中的 <code>系统调用</code> , 裸机程序就是没有操作系统的程序, 因此我们实现的程序需要绕过标准库直接和硬件打交道, 一句话就是, 不能调包了, 得手写</p>
+<h2 id="1-2-平台与目标三元组"><a href="#1-2-平台与目标三元组" class="headerlink" title="1.2 平台与目标三元组"></a>1.2 平台与目标三元组</h2><p>目标三元组 (Target Triplet): CPU 指令集、操作系统类型和标准运行时库。</p>
+<p><code>Rust</code> 工具链中的 <code>rustc</code> 可以获取以上信息:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ rustc --version --verbose</span><br><span class="line">rustc 1.75.0-nightly (aa1a71e9e 2023-10-26)</span><br><span class="line">binary: rustc</span><br><span class="line">commit-hash: aa1a71e9e90f6eb3aed8cf79fc80bea304c17ecb</span><br><span class="line">commit-date: 2023-10-26</span><br><span class="line">host: x86_64-unknown-linux-gnu</span><br><span class="line">release: 1.75.0-nightly</span><br><span class="line">LLVM version: 17.0.3</span><br></pre></td></tr></table></figure>
+
+<p><code>host</code> 中展示了: 目标平台是 <code>x86_64-unknown-linux-gnu</code> ， CPU 架构是 <code>x86_64</code> ，CPU 厂商是 <code>unknown</code> , 操作系统是 <code>linux</code> ，运行时库是 <code>gnu</code></p>
+<h2 id="1-3-从-qemu-看层级架构"><a href="#1-3-从-qemu-看层级架构" class="headerlink" title="1.3 从 qemu 看层级架构"></a>1.3 从 <a target="_blank" rel="noopener" href="https://zhida.zhihu.com/search?content_id=239614053&content_type=Article&match_order=1&q=qemu&zhida_source=entity">qemu </a>看层级架构</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-riscv64 \</span><br><span class="line">    -machine virt \</span><br><span class="line">    -nographic \</span><br><span class="line">    -bios ../bootloader/rustsbi-qemu.bin \</span><br><span class="line">    -device loader,file=target/riscv64gc-unknown-none-elf/release/os.bin,addr=0x80200000</span><br></pre></td></tr></table></figure>
+
+<p>下面是 <code>qemu</code> 的启动命令, 其中 <code>os.bin</code> 就是我们构建的裸机程序, 但为什么又存在一个 <code>rustsbi-qemu.bin</code> 呢?</p>
+<p>这涉及到计算机的启动流程, 在 <code>qemu</code> 虚拟平台上, 第一阶段的启动是 <code>qemu</code> 自己提供的程序, 第二段启动是 <code>bootloader</code> , <code>bootloader</code> 进行硬件相关的初始化工作, 第三个阶段是加载操作系统镜像（就是这里的裸机程序）。每一阶段的程序都需要将下一阶段程序放在指定的位置并进行跳转。</p>
+<p>也就是说，我们的裸机程序直接在 <code>bootloader</code> 启动后就运行了， 不需要操作系统</p>
+<p>更详细的启动流程请见 <a href="https://link.zhihu.com/?target=https://rcore-os.cn/rCore-Tutorial-Book-v3/chapter1/3first-instruction-in-kernel1.html%23id5">官方文档说明</a></p>
+<h2 id="1-4-裸机程序构建思路"><a href="#1-4-裸机程序构建思路" class="headerlink" title="1.4 裸机程序构建思路"></a>1.4 裸机程序构建思路</h2><p>第一章中, 裸机程序的构建实际上就是一步步 **剥离标准库 **并实现替代标准库中相应数据结构和函数的过程。因为 <code>std</code> 依赖于操作系统, 因此需要用不依赖与操作系统的 <code>core</code> 代替</p>
+<p>裸机程序的代码其实不复杂, 只是涉及一些不常用的知识点, 包括内联汇编等, 这些在后面的补充知识会介绍到, 除此外, 原始文档给的代码很详细了, 因此这里就不进行代码分析了。</p>
+<h2 id="1-5-链接脚本-的作用"><a href="#1-5-链接脚本-的作用" class="headerlink" title="1.5 链接脚本 的作用"></a>1.5 <a target="_blank" rel="noopener" href="https://zhida.zhihu.com/search?content_id=239614053&content_type=Article&match_order=1&q=%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC&zhida_source=entity">链接脚本 </a>的作用</h2><p>由于上述的原因， <code>bootloader</code> 启动后跳转的地址是固定的( <code>bootloader</code> 已经提供了, 不需要自己实现), 所以程序需要将起始位置放置在这固定的内存位置(此时还没有页表, 是物理内存地址), 这就是链接脚本的作用</p>
+<p>具体内存也参见 <a href="https://link.zhihu.com/?target=https://rcore-os.cn/rCore-Tutorial-Book-v3/chapter1/3first-instruction-in-kernel1.html%23id8">官方文档说明</a></p>
+<h2 id="1-6-剥离-elf"><a href="#1-6-剥离-elf" class="headerlink" title="1.6 剥离 elf"></a>1.6 剥离 elf</h2><p>编译后的代码存在一些元数据段， 因此需要将其剥离才能将程序的第一条指令放在指定的位置:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rust-objcopy --strip-all target/riscv64gc-unknown-none-elf/release/os -O binary target/riscv64gc-unknown-none-elf/release/os.bin</span><br></pre></td></tr></table></figure>
+
+<p>具体的解析参考 <a href="https://link.zhihu.com/?target=https://rcore-os.cn/rCore-Tutorial-Book-v3/chapter1/4first-instruction-in-kernel2.html%23id5">源文档</a></p>
+<h2 id="1-7-sbi-的调用时机"><a href="#1-7-sbi-的调用时机" class="headerlink" title="1.7 sbi 的调用时机"></a>1.7 <code>sbi</code> 的调用时机</h2><p>我第一次阅读官方文档后仍然有一个疑惑, 就是我们是如何调用 <code>sbi</code> , 提供的服务的?</p>
+<p>实际上还是使用 <code>ecall</code> , 先贴出调用 <code>sbi</code> 的代码:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[inline(always)]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">sbi_call</span>(which: <span class="type">usize</span>, arg0: <span class="type">usize</span>, arg1: <span class="type">usize</span>, arg2: <span class="type">usize</span>) <span class="punctuation">-&gt;</span> <span class="type">usize</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">ret</span>;</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        asm!(</span><br><span class="line">            <span class="string">&quot;li x16, 0&quot;</span>,</span><br><span class="line">            <span class="string">&quot;ecall&quot;</span>,</span><br><span class="line">            <span class="title function_ invoke__">inlateout</span>(<span class="string">&quot;x10&quot;</span>) arg0 =&gt; ret,</span><br><span class="line">            <span class="title function_ invoke__">in</span>(<span class="string">&quot;x11&quot;</span>) arg1,</span><br><span class="line">            <span class="title function_ invoke__">in</span>(<span class="string">&quot;x12&quot;</span>) arg2,</span><br><span class="line">            <span class="title function_ invoke__">in</span>(<span class="string">&quot;x17&quot;</span>) which,</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">    ret</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里, 和 U 模式下的系统调用中 <code>ecall</code> 的使用类似, S 模式下也是通过 <code>ecall</code> 来进入 M 模式, 从而使用 <code>sbi</code> 提供的服务。相关部分会在后续的系统调用章节进行更多的介绍， 此处只简单介绍：</p>
+<ol>
+<li>S 模式下的操作系统设置 <code>a0-a7</code> 和 <code>t0</code> 寄存器，以指定所需的 SBI 调用和参数。</li>
+<li>操作系统执行 <code>ecall</code> 指令，触发异常并切换到 M 模式。</li>
+<li>M 模式下的 <code>SBI</code> 实现查看寄存器的值，确定请求的服务并执行它。</li>
+<li><code>SBI</code> 实现将结果存入寄存器中。</li>
+<li>控制权返回给 S 模式的操作系统，操作系统读取寄存器以获取服务结果。</li>
+</ol>
+<p>这种机制允许分离操作系统和机器模式执行环境，使得操作系统无须了解硬件的详细实现，也能够利用硬件提供的功能。</p>
+<h2 id="2-补充知识"><a href="#2-补充知识" class="headerlink" title="2 补充知识"></a>2 补充知识</h2><h2 id="2-1-cargo-配置"><a href="#2-1-cargo-配置" class="headerlink" title="2.1 cargo 配置"></a>2.1 <code>cargo</code> 配置</h2><p><code>Rust</code> 项目中， <code>.cargo/config</code> 是一个配置文件，用于定义和调整 Cargo 的各种行为和设置。 <code>Cargo</code> 是 <code>Rust</code> 的包管理器和构建工具，它处理依赖下载、编译过程及更多功能。 <code>.cargo/config</code> 文件通常位于项目的根目录下的 <code>.cargo</code> 文件夹内，或者在用户的主目录下的 <code>.cargo</code> 文件夹内作为全局配置。</p>
+<p>下面是 <code>.cargo/config</code> 文件中一些基本配置操作的概述：</p>
+<ol>
+<li>设置构建目标<br>可以指定默认的构建目标（target triple）：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[build]</span><br><span class="line">target = &quot;riscv64gc-unknown-none-elf&quot;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>设置构建标志<br>可以添加自定义的构建标志，比如优化等级、链接参数等：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[build]</span><br><span class="line">rustflags = [&quot;-C&quot;, &quot;opt-level=2&quot;]</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>设置环境变量<br>可以设置在构建脚本中使用的环境变量：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[build]</span><br><span class="line">rustc-env = [&quot;RUST_BACKTRACE=1&quot;]</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>定义自定义构建目标<br>如果有一个自定义的架构，可以指定链接器和其他构建参数：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[target.i686-unknown-linux-gnu]</span><br><span class="line">linker = &quot;gcc&quot;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>重写依赖源<br>如果需要从不同的源或者私有源下载依赖项，可以重写它们：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[source.crates-io]</span><br><span class="line">replace-with = &#x27;tuna&#x27;</span><br><span class="line"></span><br><span class="line">[source.tuna]</span><br><span class="line">registry = &quot;https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git&quot;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>设置别名<br>可以为常用的命令设置别名，以便更快地调用：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[alias]</span><br><span class="line">b = &quot;build&quot;</span><br><span class="line">r = &quot;run&quot;</span><br><span class="line">t = &quot;test&quot;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>配置货物配置文件<br>可以为不同的构建配置（例如 debug 或 release）指定不同的设置：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[profile.dev]</span><br><span class="line">opt-level = 0</span><br><span class="line"></span><br><span class="line">[profile.release]</span><br><span class="line">opt-level = 3</span><br></pre></td></tr></table></figure>
+
+<p>在实际使用中，应该根据项目的具体需要来调整这些设置。此外， <code>.cargo/config</code> 文件支持层级结构，可以在多个目录级别定义配置文件，Cargo 会合并这些配置，其中更具体（更深层目录）的配置会覆盖更通用（更高层目录）的配置。</p>
+<p>下面是本项目的 <code>cargo</code> 配置文件:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[build]</span><br><span class="line">[build]</span><br><span class="line">target = &quot;riscv64gc-unknown-none-elf&quot;</span><br><span class="line"></span><br><span class="line">[target.riscv64gc-unknown-none-elf]</span><br><span class="line">rustflags = [</span><br><span class="line">    &quot;-Clink-arg=-Tsrc/linker.ld&quot;, &quot;-Cforce-frame-pointers=yes&quot;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>其中 两个 Rust 编译器标志（ <code>rustflags</code> ）解释如下：</p>
+<ol>
+<li><code>-Clink-arg=-Tsrc/linker.ld</code> : 这告诉 Rust 编译器传递 <code>linker.ld</code> 链接器脚本文件的路径给链接器。链接器脚本文件通常用于指导链接器如何生成最终的可执行文件，包括内存布局等。这里 <code>linker.ld</code> 文件位于项目的 <code>src</code> 目录下。</li>
+<li><code>-Cforce-frame-pointers=yes</code> : 这指示 Rust 编译器在生成可执行文件时，即使在优化模式下也保留帧指针。帧指针通常用于帮助调试和获取函数调用栈信息，但有时在优化时会被省略以提高性能。</li>
+</ol>
+<h2 id="2-2-链接脚本的语法"><a href="#2-2-链接脚本的语法" class="headerlink" title="2.2 链接脚本的语法"></a>2.2 链接脚本的语法</h2><p>下面是 <code>ch1</code> 中使用的链接脚本:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">OUTPUT_ARCH(riscv) </span><br><span class="line">/*设置了目标平台为 riscv */</span><br><span class="line">ENTRY(_start)</span><br><span class="line">/* 设置了整个程序的入口点为之前定义的全局符号 _start */</span><br><span class="line">BASE_ADDRESS = 0x80200000;</span><br><span class="line"></span><br><span class="line">SECTIONS</span><br><span class="line">&#123;</span><br><span class="line">    . = BASE_ADDRESS;</span><br><span class="line">    skernel = .;</span><br><span class="line"></span><br><span class="line">    stext = .;</span><br><span class="line">    .text : &#123;</span><br><span class="line">        *(.text.entry)</span><br><span class="line">        *(.text .text.*)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    . = ALIGN(4K);</span><br><span class="line">    etext = .;</span><br><span class="line">    srodata = .;</span><br><span class="line">    .rodata : &#123;</span><br><span class="line">        *(.rodata .rodata.*)</span><br><span class="line">        *(.srodata .srodata.*)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    . = ALIGN(4K);</span><br><span class="line">    erodata = .;</span><br><span class="line">    sdata = .;</span><br><span class="line">    .data : &#123;</span><br><span class="line">        *(.data .data.*)</span><br><span class="line">        *(.sdata .sdata.*)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    . = ALIGN(4K);</span><br><span class="line">    edata = .;</span><br><span class="line">    .bss : &#123;</span><br><span class="line">        *(.bss.stack)</span><br><span class="line">        sbss = .;</span><br><span class="line">        *(.bss .bss.*)</span><br><span class="line">        *(.sbss .sbss.*)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    . = ALIGN(4K);</span><br><span class="line">    ebss = .;</span><br><span class="line">    ekernel = .;</span><br><span class="line"></span><br><span class="line">    /DISCARD/ : &#123;</span><br><span class="line">        *(.eh_frame)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>链接脚本 ( <code>Linker Script</code> ) 是由 <code>GNU</code> 链接器 ( <code>ld</code> ) 使用的脚本语言，用于控制程序的链接过程。链接脚本的语法允许用户定义输出文件的内存布局，指定各个段的位置、大小和属性。</p>
+<ol>
+<li>输出架构 ( <code>OUTPUT_ARCH</code> )<br><code>OUTPUT_ARCH(architecture)</code> 指定目标架构，告诉链接器生成针对特定架构的代码。</li>
+<li>入口点 ( <code>ENTRY</code> )<br><code>ENTRY(symbol)</code> 指定程序的入口点，即程序开始执行的地方。</li>
+<li>符号赋值<br><code>symbol = expression;</code> 定义符号，并将其设置为特定的值或地址。</li>
+<li>段定义 ( <code>SECTIONS</code> )<br><code>SECTIONS &#123;...&#125;</code> 段定义块开始和结束的标志，里面包含了对输出段的具体指令。</li>
+<li>地址计数器<br><code>.</code> (点) 表示当前地址计数器，可以设置为特定值或者用于符号赋值。<br><strong>进行字段包含后, 其会自动地增长</strong></li>
+<li>段地址和属性<br><code>segment : &#123; subsections &#125;</code> 定义一个段（如 <code>.text</code> , <code>.data</code> ），并指定包含在该段的子段内容。</li>
+<li>子段<br><code>*(.subsection)</code> 将特定的子段包含进父段中，如将 <code>.text</code> 子段包含进 <code>.text</code> 段中。</li>
+<li>对齐指令 (ALIGN)<br><code>ALIGN(expression)</code> 对当前地址计数器进行对齐，确保地址是特定值的倍数，常用于页对齐或数据结构对齐。</li>
+<li>输出段属性</li>
+</ol>
+<ul>
+<li><code>&gt;region</code> 指定输出段应该放置在哪个内存区域。</li>
+<li><code>AT(address)</code> 指定输出段的加载地址，与放置地址可能不同。</li>
+<li><code>:alignment</code> 指定段对齐。</li>
+</ul>
+<ol>
+<li>内存布局 ( <code>MEMORY</code> )</li>
+</ol>
+<ul>
+<li><code>MEMORY &#123; ... &#125;</code> 定义内存布局和属性，用于告诉链接器如何使用不同的内存区域。</li>
+</ul>
+<ol>
+<li><code>/DISCARD/</code></li>
+</ol>
+<ul>
+<li><code>/DISCARD/ : &#123; ... &#125;</code> 用于丢弃不需要的段，例如调试信息或未使用的段。</li>
+</ul>
+<p>现在再来看本章的链接脚本:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">OUTPUT_ARCH(riscv) </span><br><span class="line">/*设置了目标平台为 riscv */</span><br><span class="line">ENTRY(_start)</span><br><span class="line">/* 设置了整个程序的入口点为之前定义的全局符号 _start */</span><br><span class="line">BASE_ADDRESS = 0x80200000;</span><br><span class="line"></span><br><span class="line">SECTIONS</span><br><span class="line">&#123;</span><br><span class="line">    . = BASE_ADDRESS;</span><br><span class="line">    skernel = .;</span><br><span class="line"></span><br><span class="line">    stext = .;</span><br><span class="line">    .text : &#123;</span><br><span class="line">        *(.text.entry)</span><br><span class="line">        *(.text .text.*)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    . = ALIGN(4K);</span><br><span class="line">    etext = .;</span><br><span class="line">    srodata = .;</span><br><span class="line">    .rodata : &#123;</span><br><span class="line">        *(.rodata .rodata.*)</span><br><span class="line">        *(.srodata .srodata.*)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    . = ALIGN(4K);</span><br><span class="line">    erodata = .;</span><br><span class="line">    sdata = .;</span><br><span class="line">    .data : &#123;</span><br><span class="line">        *(.data .data.*)</span><br><span class="line">        *(.sdata .sdata.*)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    . = ALIGN(4K);</span><br><span class="line">    edata = .;</span><br><span class="line">    .bss : &#123;</span><br><span class="line">        *(.bss.stack)</span><br><span class="line">        sbss = .;</span><br><span class="line">        *(.bss .bss.*)</span><br><span class="line">        *(.sbss .sbss.*)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    . = ALIGN(4K);</span><br><span class="line">    ebss = .;</span><br><span class="line">    ekernel = .;</span><br><span class="line"></span><br><span class="line">    /DISCARD/ : &#123;</span><br><span class="line">        *(.eh_frame)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这就很好理解了, 其分别将指的目标文件中各个段的内容整合在一起, 并且为每个段的开始地址声明了变量: <code>stext</code> , <code>etext</code> , <code>erodata</code> , <code>edata</code> , <code>ebss</code></p>
+<h2 id="2-3-Rust-宏语法"><a href="#2-3-Rust-宏语法" class="headerlink" title="2.3 Rust 宏语法"></a>2.3 <code>Rust</code> 宏语法</h2><p>本项目执行实现了 <code>println!</code> 宏, 在我之前学 <code>Rust</code> 时, 主要是使用已定义的宏, 自己实现宏的部分仅仅是略过, 因此这里特别来复习下宏的定义, 项目中定义了下面的宏:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[macro_export]</span></span><br><span class="line"><span class="built_in">macro_rules!</span> print &#123;</span><br><span class="line">    ($fmt: literal $(, $($arg: tt)+)?) =&gt; &#123;</span><br><span class="line">        $crate::console::<span class="title function_ invoke__">print</span>(<span class="built_in">format_args!</span>($fmt $(, $($arg)+)?))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解释如下:</p>
+<ol>
+<li><code>#[macro_export]</code> 表示这个宏是要被导出的，使得当这个宏所在的 <code>crate</code> 被其他 <code>crate</code> 引用时，这个宏也可以被使用。</li>
+<li><code>macro_rules!</code> 这是宏的声明开始， <code>macro_rules!</code> 是 Rust 中定义宏的关键字，后面跟着的 <code>println</code> 是宏的名字。</li>
+<li>宏的匹配部分<br>($fmt: literal $(, $($arg: tt)+)?)</li>
+</ol>
+<p>这行定义了宏的模式匹配部分。它匹配一个字面量 <code>$fmt</code> 作为第一个参数，后面可以跟一个逗号和任意数量的额外参数 <code>$arg</code> 。参数使用 Rust 宏的”token tree” ( <code>tt</code> )设计，它可以匹配几乎任何 Rust 语法。</p>
+<ul>
+<li><code>$fmt: literal</code> 表示第一个参数必须是一个字面量（通常是一个字符串字面量）。</li>
+<li><code>literal</code> : 一个特定的关键字, 用来指定宏参数应该是一个字面量</li>
+<li><code>$(, $($arg: tt)+)?</code> 是一个可选的模式，它使用了 Rust 宏的重复模式：</li>
+<li><code>$($arg: tt)+</code> 表示可以有一个或多个额外的参数，每个参数都是一个 <code>token tree</code> 。</li>
+</ul>
+<blockquote>
+<p>补充宏知识<br>在 Rust 的宏定义中， <code>$</code> 和 <code>?</code> 符号都用于模式匹配，但它们在宏规则中扮演着不同的角色。</p>
+</blockquote>
+<ul>
+<li><p><code>$</code> 符号:</p>
+<ul>
+<li>用法 1: 指示一个变量的开始，可以捕获宏输入中的相应部分。在宏规则中， <code>$</code> 后面通常跟着一个标识符和一个冒号，再跟着一个设计符( <code>designator</code> )，用来指定变量的类型。例如， <code>$var:ident</code> 表示匹配一个标识符并将其绑定到变量 <code>$var</code> 中。</li>
+<li>用法 2: 标识重复的开始，例如 <code>$($arg:tt),*</code> 表示重复匹配 <code>$arg</code> 零次或多次，每次匹配由逗号分隔。</li>
+</ul>
+</li>
+<li><p><code>?</code> 符号: 它用于表示前面的模式是可选的。在宏规则中，将 <code>?</code> 放在模式的外部，表示这个模式可以出现零次或一次。这类似于正则表达式中的 <code>?</code> 运算符。例如，在 <code>$($arg:tt)?</code> 中， <code>?</code> 表明 <code>$arg</code> 是可选的，可以有或没有。</p>
+</li>
+<li><p><code>+</code> 符号: 它用于表示前面的模式出现一次多次。在宏规则中，将 <code>+</code> 放在模式的外部，表示这个模式可以出现一次或多次。这类似于正则表达式中的 <code>+</code> 运算符。例如，在 <code>$($arg:tt)+</code> 中， <code>?</code> 表明 <code>$arg</code> 以出现一次或多次</p>
+</li>
+</ul>
+<p>结合上面的符号使用时， <code>$</code> 捕获宏参数，而 <code>?</code> 或 <code>+</code> 指定这些参数的重复模式。所以 <code>$(, $($arg: tt)+)?</code> 这部分的意思是：</p>
+<ul>
+<li><code>$( ... )?</code> 表示整个模式是可选的，即可以有也可以没有。</li>
+<li><code>,</code> 表示模式的开始，一个逗号，用来分隔参数。</li>
+<li><code>$($arg: tt)+</code> 表示匹配一个或多个 <code>$arg</code> ，每个 <code>$arg</code> 是一个 token tree。</li>
+</ul>
+<ol>
+<li>匹配后的动作<br>根据前面的分析, 这个模式可以匹配零个或多个以逗号分隔的 <code>token trees</code> ，如果匹配到，则将这些 <code>token trees</code> 作为参数传递给 <code>format_args!</code> 宏。$crate::console::print(format_args!(concat!($fmt, “\n”) $(, $($arg)+)?))</li>
+</ol>
+<p>这是宏展开的部分。</p>
+<ul>
+<li><code>$crate</code> 是一个特殊的变量，它在宏内部用于引用当前 <code>crate</code> 的根路径，这样即使宏被移动到其他 crate 中，它也能正确地引用到原来的 <code>crate</code> 中定义的项。</li>
+<li><code>format_args!</code> 是 Rust 的一个内置宏，用于处理格式化参数。它接受一个格式化字符串和对应的参数，并返回一个可以延迟计算的格式化参数结构体，这通常用于避免字符串的分配和复制。</li>
+<li><code>concat!($fmt, &quot;\n&quot;)</code> 将传入的格式化字符串和一个换行符连在一起，确保输出后会自动换行。</li>
+<li><code>$(, $($arg)+)?</code> 是对传入参数的引用，如果有参数的话，它们会被插入到格式化参数结构体中。</li>
+</ul>
+<h2 id="2-4-Rust-内联汇编"><a href="#2-4-Rust-内联汇编" class="headerlink" title="2.4 Rust 内联汇编"></a>2.4 Rust 内联汇编</h2><p>使用的 <code>RustSbi</code> 中存在如下的 <code>Rust</code> 内联汇编的用法:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[inline(always)]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">sbi_call</span>(which: <span class="type">usize</span>, arg0: <span class="type">usize</span>, arg1: <span class="type">usize</span>, arg2: <span class="type">usize</span>) <span class="punctuation">-&gt;</span> <span class="type">usize</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">ret</span>;</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        asm!(</span><br><span class="line">            <span class="string">&quot;li x16, 0&quot;</span>,</span><br><span class="line">            <span class="string">&quot;ecall&quot;</span>,</span><br><span class="line">            <span class="title function_ invoke__">inlateout</span>(<span class="string">&quot;x10&quot;</span>) arg0 =&gt; ret,</span><br><span class="line">            <span class="title function_ invoke__">in</span>(<span class="string">&quot;x11&quot;</span>) arg1,</span><br><span class="line">            <span class="title function_ invoke__">in</span>(<span class="string">&quot;x12&quot;</span>) arg2,</span><br><span class="line">            <span class="title function_ invoke__">in</span>(<span class="string">&quot;x17&quot;</span>) which,</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">    ret</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解释如下:</p>
+<ol>
+<li><code>#[inline(always)]Rust</code> 的属性 <code>#[inline(always)]</code> 告诉编译器这个函数应该总是被内联，也就是说，在每个调用点替换为函数体的代码，而不是实际进行函数调用。</li>
+<li><code>asm!asm!</code> 宏是用来编写内联汇编代码的，这段代码直接使用了 <a target="_blank" rel="noopener" href="https://zhida.zhihu.com/search?content_id=239614053&content_type=Article&match_order=1&q=RISC-V&zhida_source=entity">RISC-V </a>的汇编语法：</li>
+</ol>
+<ul>
+<li><code>&quot;li x16, 0&quot;</code> ：这条指令将立即数 0 加载到寄存器 <code>x16</code> 中。 <code>li</code> 代表”load immediate”。</li>
+<li><code>&quot;ecall&quot;</code> ：陷入更低级的模式</li>
+<li><code>inlateout(&quot;x10&quot;) arg0 =&gt; ret</code> 在 <code>ecall</code> 执行后，返回值通常存放在 <code>x10</code> 寄存器中。Rust 内联汇编通过 <code>inlateout(&quot;x10&quot;) arg0 =&gt; ret</code> 这个约束来传递这个信息，即 <code>arg0</code> 的值在 <code>ecall</code> 执行前被放入 <code>x10</code> 寄存器中，并且 <code>ecall</code> 执行后， <code>x10</code> 寄存器中的值会存放到变量 <code>ret</code> 中。</li>
+<li><code>in(&quot;x11&quot;) arg1</code> &amp;&amp; <code>in(&quot;x12&quot;) arg2</code> &amp;&amp; <code>in(&quot;x17&quot;) which</code> 在执行汇编代码前将值加载到指定的寄存器中。在这种情况下， <code>arg1</code> 被加载到 <code>x11</code> 寄存器， <code>arg2</code> 被加载到 <code>x12</code> 寄存器， <code>which</code> 被加载到 <code>x17</code> 寄存器。</li>
+</ul>
+<p>这里容易产生一个误区, 就是, 存放输入寄存器的操作位于 <code>ecall</code> 出现之后, 实际上所有的输入操作数都是在执行任何汇编指令之前就被放入相应寄存器中的。</p>
+<h2 id="2-5-直接嵌入汇编代码"><a href="#2-5-直接嵌入汇编代码" class="headerlink" title="2.5 直接嵌入汇编代码"></a>2.5 直接嵌入汇编代码</h2><p>可以使用 <code>global_asm!</code> 宏包含全局汇编代码。这个宏允许在 <code>Rust</code> 代码中直接嵌入汇编代码片段，并且这些代码会在全局范围内被汇编器处理。</p>
+<p>以下项目代码中的 <code>global_asm!</code> 的例子：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#![feature(global_asm)]</span></span><br><span class="line">global_asm!(<span class="built_in">include_str!</span>(<span class="string">&quot;entry.asm&quot;</span>));</span><br></pre></td></tr></table></figure>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">凌福义</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/posts/undefined/">http://example.com/posts/undefined/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">凌福义's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/rcore/">rcore</a></div><div class="post-share"><div class="social-share" data-image="/img/images_20250411165145.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/post/cellji-ben-te-xing-z2u5oyi.html" title="cell基本特性"><img class="cover" src="https://cdn.pixabay.com/photo/2013/07/12/17/47/penguin-152440_640.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">cell基本特性</div></div><div class="info-2"><div class="info-item-1">cell基本特性 内部可变性：通过编译时保证安全，而非运行时锁 零成本抽象：无锁设计，性能接近直接操作原生数据 单线程限制：仅适用于单线程环境，跨线程需要使用 Mutex 或者 RwLock 等同步机制  基本用法1、创建 Cell： 12use std::cell::Cell;let shared_state = Cell::new(100); // 初始值为 100 的 Cell  2、常用方法：    方法 作用 示例    get() 获取不可变引用 let value = shared_state.get();   set(value) 替换整个值 shared_state.set(100);   replace(value) 替换值并返回旧值 let old = shared_state.replace(200);   take() 移除并返回值，原位置留空（None） let val = shared_state.take();   swap(value) 用新值替换旧值并返回旧值 let old =...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="gitalk-container"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#rCore-chapter1-%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E4%B8%8E%E5%9F%BA%E6%9C%AC%E7%8E%AF%E5%A2%83"><span class="toc-number">1.</span> <span class="toc-text">rCore chapter1 应用程序与基本环境</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%90%86%E8%AE%BA%E7%9F%A5%E8%AF%86%E6%A2%B3%E7%90%86"><span class="toc-number">1.1.</span> <span class="toc-text">1 理论知识梳理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E6%89%A7%E8%A1%8C%E7%8E%AF%E5%A2%83"><span class="toc-number">1.2.</span> <span class="toc-text">1.1 应用程序执行环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-%E5%B9%B3%E5%8F%B0%E4%B8%8E%E7%9B%AE%E6%A0%87%E4%B8%89%E5%85%83%E7%BB%84"><span class="toc-number">1.3.</span> <span class="toc-text">1.2 平台与目标三元组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-%E4%BB%8E-qemu-%E7%9C%8B%E5%B1%82%E7%BA%A7%E6%9E%B6%E6%9E%84"><span class="toc-number">1.4.</span> <span class="toc-text">1.3 从 qemu 看层级架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-4-%E8%A3%B8%E6%9C%BA%E7%A8%8B%E5%BA%8F%E6%9E%84%E5%BB%BA%E6%80%9D%E8%B7%AF"><span class="toc-number">1.5.</span> <span class="toc-text">1.4 裸机程序构建思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-5-%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC-%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-number">1.6.</span> <span class="toc-text">1.5 链接脚本 的作用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-%E5%89%A5%E7%A6%BB-elf"><span class="toc-number">1.7.</span> <span class="toc-text">1.6 剥离 elf</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-7-sbi-%E7%9A%84%E8%B0%83%E7%94%A8%E6%97%B6%E6%9C%BA"><span class="toc-number">1.8.</span> <span class="toc-text">1.7 sbi 的调用时机</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E8%A1%A5%E5%85%85%E7%9F%A5%E8%AF%86"><span class="toc-number">1.9.</span> <span class="toc-text">2 补充知识</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-cargo-%E9%85%8D%E7%BD%AE"><span class="toc-number">1.10.</span> <span class="toc-text">2.1 cargo 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E7%9A%84%E8%AF%AD%E6%B3%95"><span class="toc-number">1.11.</span> <span class="toc-text">2.2 链接脚本的语法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-Rust-%E5%AE%8F%E8%AF%AD%E6%B3%95"><span class="toc-number">1.12.</span> <span class="toc-text">2.3 Rust 宏语法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-Rust-%E5%86%85%E8%81%94%E6%B1%87%E7%BC%96"><span class="toc-number">1.13.</span> <span class="toc-text">2.4 Rust 内联汇编</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-5-%E7%9B%B4%E6%8E%A5%E5%B5%8C%E5%85%A5%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81"><span class="toc-number">1.14.</span> <span class="toc-text">2.5 直接嵌入汇编代码</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(/img/index.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2025 By 凌福义</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><div class="js-pjax"><script>(() => {
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = `%%{init:{ 'theme':'${theme}'}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+
+  const commentCount = n => {
+    const isCommentCount = document.querySelector('#post-meta .gitalk-comment-count')
+    if (isCommentCount) {
+      isCommentCount.textContent= n
+    }
+  }
+
+  const initGitalk = (el, path) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGitalk = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const gitalk = new Gitalk({
+      clientID: 'Ov23liB0A7BBj4K7Insh',
+      clientSecret: '4b3759f76009e031f06be67e415b18c149a2d910',
+      repo: 'lingfuyi.github.io',
+      owner: 'lingfuyi',
+      admin: ['lingfuyi'],
+      updateCountCallback: commentCount,
+      ...option,
+      id: isShuoshuo ? path : (option && option.id) || '581f34a841c79fe95edfecc803dd082f'
+    })
+
+    gitalk.render('gitalk-container')
+  }
+
+  const loadGitalk = async(el, path) => {
+    if (typeof Gitalk === 'function') initGitalk(el, path)
+    else {
+      await btf.getCSS('https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css')
+      await btf.getScript('https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js')
+      initGitalk(el, path)
+    }
+  }
+
+  if (isShuoshuo) {
+    'Gitalk' === 'Gitalk'
+      ? window.shuoshuoComment = { loadComment: loadGitalk }
+      : window.loadOtherComment = loadGitalk
+    return
+  }
+
+  if ('Gitalk' === 'Gitalk' || !false) {
+    if (false) btf.loadComment(document.getElementById('gitalk-container'), loadGitalk)
+    else loadGitalk()
+  } else {
+    window.loadOtherComment = loadGitalk
+  }
+})()</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
