@@ -1,0 +1,377 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>cell基本特性 | 凌福义's Blog</title><meta name="author" content="凌福义"><meta name="copyright" content="凌福义"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="cell基本特性 内部可变性：通过编译时保证安全，而非运行时锁 零成本抽象：无锁设计，性能接近直接操作原生数据 单线程限制：仅适用于单线程环境，跨线程需要使用 Mutex 或者 RwLock 等同步机制  基本用法1、创建 Cell： 12use std::cell::Cell;let shared_state &#x3D; Cell::new(100); &#x2F;&#x2F; 初始值为 100 的 Cell  2、常用方">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cell基本特性">
+<meta property="og:url" content="http://example.com/post/cellji-ben-te-xing-z2u5oyi.html">
+<meta property="og:site_name" content="凌福义&#39;s Blog">
+<meta property="og:description" content="cell基本特性 内部可变性：通过编译时保证安全，而非运行时锁 零成本抽象：无锁设计，性能接近直接操作原生数据 单线程限制：仅适用于单线程环境，跨线程需要使用 Mutex 或者 RwLock 等同步机制  基本用法1、创建 Cell： 12use std::cell::Cell;let shared_state &#x3D; Cell::new(100); &#x2F;&#x2F; 初始值为 100 的 Cell  2、常用方">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.pixabay.com/photo/2013/07/12/17/47/penguin-152440_640.png">
+<meta property="article:published_time" content="2025-03-27T02:35:27.000Z">
+<meta property="article:modified_time" content="2025-03-27T02:40:46.000Z">
+<meta property="article:author" content="凌福义">
+<meta property="article:tag" content="rust">
+<meta property="article:tag" content="cell refcell">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.pixabay.com/photo/2013/07/12/17/47/penguin-152440_640.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "cell基本特性",
+  "url": "http://example.com/post/cellji-ben-te-xing-z2u5oyi.html",
+  "image": "https://cdn.pixabay.com/photo/2013/07/12/17/47/penguin-152440_640.png",
+  "datePublished": "2025-03-27T02:35:27.000Z",
+  "dateModified": "2025-03-27T02:40:46.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "凌福义",
+      "url": "http://example.com/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/post/cellji-ben-te-xing-z2u5oyi.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?140fc20037f71e13c6ad453a010848bd";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: true,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'cell基本特性',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="https://cdn.staticfile.org/lxgw-wenkai-screen-webfont/1.7.0/style.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">10</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/weread"><i class="fa-fw fas fa-book"></i><span> 微信读书</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 个人笔记</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/photos/"><i class="fa-fw fas fa-images"></i><span> 照片集</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">凌福义's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">cell基本特性</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/weread"><i class="fa-fw fas fa-book"></i><span> 微信读书</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 个人笔记</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/photos/"><i class="fa-fw fas fa-images"></i><span> 照片集</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">cell基本特性</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-03-27T02:35:27.000Z" title="发表于 2025-03-27 10:35:27">2025-03-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-03-27T02:40:46.000Z" title="更新于 2025-03-27 10:40:46">2025-03-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/rust%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">rust学习笔记</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">723</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>2分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="cell基本特性"><a href="#cell基本特性" class="headerlink" title="cell基本特性"></a>cell基本特性</h1><ol>
+<li>内部可变性：通过编译时保证安全，而非运行时锁</li>
+<li>零成本抽象：无锁设计，性能接近直接操作原生数据</li>
+<li>单线程限制：仅适用于单线程环境，跨线程需要使用 Mutex 或者 RwLock 等同步机制</li>
+</ol>
+<h2 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a><strong>基本用法</strong></h2><p>1、创建 Cell：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::cell::Cell;</span><br><span class="line"><span class="keyword">let</span> <span class="variable">shared_state</span> = Cell::<span class="title function_ invoke__">new</span>(<span class="number">100</span>); <span class="comment">// 初始值为 100 的 Cell</span></span><br></pre></td></tr></table></figure>
+
+<p>2、常用方法：</p>
+<table>
+<thead>
+<tr>
+<th><strong>方法</strong></th>
+<th><strong>作用</strong></th>
+<th><strong>示例</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>get()</td>
+<td>获取不可变引用</td>
+<td>let value = shared_state.get();</td>
+</tr>
+<tr>
+<td>set(value)</td>
+<td>替换整个值</td>
+<td>shared_state.set(100);</td>
+</tr>
+<tr>
+<td>replace(value)</td>
+<td>替换值并返回旧值</td>
+<td>let old = shared_state.replace(200);</td>
+</tr>
+<tr>
+<td>take()</td>
+<td>移除并返回值，原位置留空（None）</td>
+<td>let val = shared_state.take();</td>
+</tr>
+<tr>
+<td>swap(value)</td>
+<td>用新值替换旧值并返回旧值</td>
+<td>let old = shared_state.swap(300);</td>
+</tr>
+<tr>
+<td>as_ptr()</td>
+<td>获取指向内部数据的原始指针</td>
+<td>let ptr = shared_state.as_ptr();</td>
+</tr>
+<tr>
+<td>from_mut(ptr)</td>
+<td>将 *mut T 转换为 &amp;mut Cell</td>
+<td>unsafe { Cell::from_mut(ptr) }</td>
+</tr>
+<tr>
+<td>into_inner()</td>
+<td>移除内部值并返回它</td>
+<td>let value = shared_state.into_inner();</td>
+</tr>
+</tbody></table>
+<h2 id="典型使用场景"><a href="#典型使用场景" class="headerlink" title="典型使用场景"></a><strong>典型使用场景</strong></h2><p>1、场景 1：全局状态管理</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::cell::Cell;</span><br><span class="line"><span class="keyword">use</span> std::rc::Rc;</span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Counter</span> &#123;</span><br><span class="line">    count: Cell&lt;<span class="type">u32</span>&gt;,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">Counter</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>() <span class="punctuation">-&gt;</span> Rc&lt;<span class="keyword">Self</span>&gt; &#123;</span><br><span class="line">        Rc::<span class="title function_ invoke__">new</span>(Counter &#123;</span><br><span class="line">            count: Cell::<span class="title function_ invoke__">new</span>(<span class="number">0</span>)</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">increment</span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.count.<span class="title function_ invoke__">set</span>(<span class="keyword">self</span>.count.<span class="title function_ invoke__">get</span>() + <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">get_count</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="type">u32</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.count.<span class="title function_ invoke__">get</span>()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">counter</span> = Counter::<span class="title function_ invoke__">new</span>();</span><br><span class="line">    counter.<span class="title function_ invoke__">increment</span>();</span><br><span class="line">    <span class="built_in">assert_eq!</span>(counter.<span class="title function_ invoke__">get_count</span>(), <span class="number">1</span>); <span class="comment">// 输出 count 的值为 1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2、场景 2：闭包中可变状态</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::cell::Cell;</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = Cell::<span class="title function_ invoke__">new</span>(<span class="number">10</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">closure</span> = || &#123;</span><br><span class="line">        x.<span class="title function_ invoke__">set</span>(x.<span class="title function_ invoke__">get</span>() + <span class="number">1</span>);</span><br><span class="line">        x.<span class="title function_ invoke__">get</span>()</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;closure result: &#123;&#125;&quot;</span>, <span class="title function_ invoke__">closure</span>()); <span class="comment">// 输出 closure result: 11</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;closure result: &#123;&#125;&quot;</span>, <span class="title function_ invoke__">closure</span>()); <span class="comment">// 输出 closure result: 12</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3、异步任务状态共享</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::cell::Cell;</span><br><span class="line"><span class="keyword">use</span> tokio::task;</span><br><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">async_task</span>(state: Cell&lt;<span class="type">i32</span>&gt;) &#123;</span><br><span class="line">    state.<span class="title function_ invoke__">set</span>(state.<span class="title function_ invoke__">get</span>() + <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">#[tokio::main]</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">state</span> = Cell::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line">    task::<span class="title function_ invoke__">spawn</span>(<span class="keyword">async</span> <span class="keyword">move</span> &#123;</span><br><span class="line">        <span class="title function_ invoke__">async_task</span>(state).<span class="keyword">await</span>;</span><br><span class="line">    &#125;).<span class="keyword">await</span>.<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;state: &#123;&#125;&quot;</span>, state.<span class="title function_ invoke__">get</span>()); <span class="comment">// 输出 state: 1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="与-RefCell-区别"><a href="#与-RefCell-区别" class="headerlink" title="与 RefCell 区别"></a><strong>与 RefCell 区别</strong></h2><table>
+<thead>
+<tr>
+<th><strong>特性</strong></th>
+<th><strong>Cell</strong></th>
+<th><strong>RefCell</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>值类型要求</td>
+<td>无</td>
+<td>无</td>
+</tr>
+<tr>
+<td>运行时检查</td>
+<td>无（编译时保证安全）</td>
+<td>运行时 borrow 检查</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>高（零成本）</td>
+<td>低（动态检查）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>单线程、高性能需求</td>
+<td>需要动态借用检查的复杂逻辑</td>
+</tr>
+</tbody></table>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><p>Cell 和 RefCell 都是 Rust 提供的零成本抽象，用于在单线程环境下管理不可变状态。Cell 和 RefCell 的区别在于运行时检查，Cell 无运行时检查，RefCell 有运行时检查。Cell 适用于简单的状态管理，RefCell 适用于复杂的状态管理。</p>
+<p>Cell 是 Rust 中最轻量级的内部可变性工具，适用于以下场景：</p>
+<p>1、单线程环境下的共享可变状态。</p>
+<p>2、性能敏感的场景（如高频计数器、缓存）。</p>
+<p>3、闭包或异步任务中需要修改外部变量。</p>
+<p>4、全局状态或单例模式的管理。</p>
+<p>如果需要在多线程间共享数据，或需要更复杂的借用规则，应改用 Mutex、RwLock 或 RefCell。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">凌福义</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/post/cellji-ben-te-xing-z2u5oyi.html">http://example.com/post/cellji-ben-te-xing-z2u5oyi.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">凌福义's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/rust/">rust</a><a class="post-meta__tags" href="/tags/cell-refcell/">cell refcell</a></div><div class="post-share"><div class="social-share" data-image="https://cdn.pixabay.com/photo/2013/07/12/17/47/penguin-152440_640.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/undefined/" title="rCore chapter1 应用程序与基本环境"><img class="cover" src="/img/images_20250411165145.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">rCore chapter1 应用程序与基本环境</div></div><div class="info-2"><div class="info-item-1">rCore chapter1 应用程序与基本环境参考文档： 第一章:应用程序与基本执行环境 - rCore-Tutorial-Guide-2025S 文档 1 理论知识梳理1.1 应用程序执行环境 应用程序执行环境栈 上图是从官方文档中摘取的， 操作系统 承接了 硬件平台 和各种编程语言标准库中的 系统调用 , 裸机程序就是没有操作系统的程序, 因此我们实现的程序需要绕过标准库直接和硬件打交道, 一句话就是, 不能调包了, 得手写 1.2 平台与目标三元组目标三元组 (Target Triplet): CPU 指令集、操作系统类型和标准运行时库。 Rust 工具链中的 rustc 可以获取以上信息: 12345678$ rustc --version --verboserustc 1.75.0-nightly (aa1a71e9e 2023-10-26)binary: rustccommit-hash: aa1a71e9e90f6eb3aed8cf79fc80bea304c17ecbcommit-date: 2023-10-26host:...</div></div></div></a><a class="pagination-related" href="/posts/undefined/" title="闭包"><img class="cover" src="https://cdn.pixabay.com/photo/2017/03/20/19/45/time-2160154_640.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">闭包</div></div><div class="info-2"><div class="info-item-1">Rust中的闭包(Closure)，也叫lambda表达式，是一个可以捕获环境变量的匿名函数。闭包特点如下：  声明时候使用||代替()将输入参数括起来 函数体定界符({})对于单个表达式闭包可以省略，对于多行表达式闭包必须有 闭包可以捕获环境变量，即外部作用域的变量  一个例子，下面示例输出3： 1234fn main() &#123;    let i = |i: u32| -&gt; u32 &#123; i + 1 &#125;;    println!(&quot;&#123;&#125;&quot;, i(2));&#125; 捕获闭包可以捕获外部作用域的变量，即使这些变量被移动到了闭包内部。同时捕获也可以灵活的消耗生命周期比如可以move和borrow，move会将变量的所有权转移到闭包内部，borrow则不会。当然，你可以强制使用move把所有权移动到闭包内,这样外部函数就不能再使用这个变量了 1234567891011121314151617181920212223fn main() &#123;    use std::mem;    let mut...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/undefined/" title="类型转换"><img class="cover" src="https://cdn.pixabay.com/photo/2017/03/27/09/24/think-2177813_640.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-03-01</div><div class="info-item-2">类型转换</div></div><div class="info-2"><div class="info-item-1">rust跟其他C C++不同的是，不提供原生类型之间的隐式转换，需要通过强制类型转换来实现。类型转换可以分为以下几种：  as转换 From和Into Traits TryFrom和TryInto 转换 ToString 和 FromStr 总结 常见问题参考  as转换 as 转换适用于简单的场景，依赖内置显示类型转换，且无法处理转换过程出现的错误  123456789101112131415fn main() &#123;	let a = 3.1 as i8;	let b = 100_i8 as i32;	let c = &#x27;a&#x27; as u8; // 将字符&#x27;a&#x27;转换为整数，97	println!(&quot;&#123;&#125;,&#123;&#125;,&#123;&#125;&quot;,a,b,c)	let mut values: [i32; 2] = [1, 2];	let p1: *mut i32 = values.as_mut_ptr();	let first_address = p1 as usize;...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="gitalk-container"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#cell%E5%9F%BA%E6%9C%AC%E7%89%B9%E6%80%A7"><span class="toc-number">1.</span> <span class="toc-text">cell基本特性</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95"><span class="toc-number">1.1.</span> <span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B8%E5%9E%8B%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">1.2.</span> <span class="toc-text">典型使用场景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E-RefCell-%E5%8C%BA%E5%88%AB"><span class="toc-number">1.3.</span> <span class="toc-text">与 RefCell 区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">1.4.</span> <span class="toc-text">总结</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(/img/index.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2025 By 凌福义</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><div class="js-pjax"><script>(() => {
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = `%%{init:{ 'theme':'${theme}'}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+
+  const commentCount = n => {
+    const isCommentCount = document.querySelector('#post-meta .gitalk-comment-count')
+    if (isCommentCount) {
+      isCommentCount.textContent= n
+    }
+  }
+
+  const initGitalk = (el, path) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGitalk = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const gitalk = new Gitalk({
+      clientID: 'Ov23liB0A7BBj4K7Insh',
+      clientSecret: '4b3759f76009e031f06be67e415b18c149a2d910',
+      repo: 'lingfuyi.github.io',
+      owner: 'lingfuyi',
+      admin: ['lingfuyi'],
+      updateCountCallback: commentCount,
+      ...option,
+      id: isShuoshuo ? path : (option && option.id) || 'e7b876dc2ac1eca6147915b101573dee'
+    })
+
+    gitalk.render('gitalk-container')
+  }
+
+  const loadGitalk = async(el, path) => {
+    if (typeof Gitalk === 'function') initGitalk(el, path)
+    else {
+      await btf.getCSS('https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css')
+      await btf.getScript('https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js')
+      initGitalk(el, path)
+    }
+  }
+
+  if (isShuoshuo) {
+    'Gitalk' === 'Gitalk'
+      ? window.shuoshuoComment = { loadComment: loadGitalk }
+      : window.loadOtherComment = loadGitalk
+    return
+  }
+
+  if ('Gitalk' === 'Gitalk' || !false) {
+    if (false) btf.loadComment(document.getElementById('gitalk-container'), loadGitalk)
+    else loadGitalk()
+  } else {
+    window.loadOtherComment = loadGitalk
+  }
+})()</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

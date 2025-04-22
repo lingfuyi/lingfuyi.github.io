@@ -1,0 +1,529 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>armv8虚拟化扫盲 | 凌福义's Blog</title><meta name="author" content="凌福义"><meta name="copyright" content="凌福义"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="armv8虚拟化扫盲虚拟化概述根据虚拟化实现方式不同，分为软件虚拟化和硬件虚拟化  软件虚拟化  qemu   硬件虚拟化  type1虚拟化：xen+ type2虚拟化：kvm   半虚拟化  virtio+    软件虚拟化之qemu qemu也可以使用type2级别的硬件虚拟化配合，如果没有kvm硬件加速支持，qemu可以纯粹的软件虚拟化   qemu采用TCG中间指令格式，将guest o">
+<meta property="og:type" content="article">
+<meta property="og:title" content="armv8虚拟化扫盲">
+<meta property="og:url" content="http://example.com/post/armv8-virtualization-lyrics-zjg15p.html">
+<meta property="og:site_name" content="凌福义&#39;s Blog">
+<meta property="og:description" content="armv8虚拟化扫盲虚拟化概述根据虚拟化实现方式不同，分为软件虚拟化和硬件虚拟化  软件虚拟化  qemu   硬件虚拟化  type1虚拟化：xen+ type2虚拟化：kvm   半虚拟化  virtio+    软件虚拟化之qemu qemu也可以使用type2级别的硬件虚拟化配合，如果没有kvm硬件加速支持，qemu可以纯粹的软件虚拟化   qemu采用TCG中间指令格式，将guest o">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.tpointtech.com/cloudpages/images/cloud-hypervisor.png">
+<meta property="article:published_time" content="2025-04-08T02:10:01.000Z">
+<meta property="article:modified_time" content="2025-04-17T01:30:16.000Z">
+<meta property="article:author" content="凌福义">
+<meta property="article:tag" content="armv8虚拟化">
+<meta property="article:tag" content="cpu虚拟化">
+<meta property="article:tag" content="内存虚拟化">
+<meta property="article:tag" content="nvhe">
+<meta property="article:tag" content="vhe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.tpointtech.com/cloudpages/images/cloud-hypervisor.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "armv8虚拟化扫盲",
+  "url": "http://example.com/post/armv8-virtualization-lyrics-zjg15p.html",
+  "image": "https://images.tpointtech.com/cloudpages/images/cloud-hypervisor.png",
+  "datePublished": "2025-04-08T02:10:01.000Z",
+  "dateModified": "2025-04-17T01:30:16.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "凌福义",
+      "url": "http://example.com/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/post/armv8-virtualization-lyrics-zjg15p.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?140fc20037f71e13c6ad453a010848bd";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: true,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'armv8虚拟化扫盲',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="https://cdn.staticfile.org/lxgw-wenkai-screen-webfont/1.7.0/style.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">10</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/weread"><i class="fa-fw fas fa-book"></i><span> 微信读书</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 个人笔记</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/photos/"><i class="fa-fw fas fa-images"></i><span> 照片集</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">凌福义's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">armv8虚拟化扫盲</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/weread"><i class="fa-fw fas fa-book"></i><span> 微信读书</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 个人笔记</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/photos/"><i class="fa-fw fas fa-images"></i><span> 照片集</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">armv8虚拟化扫盲</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-04-08T02:10:01.000Z" title="发表于 2025-04-08 10:10:01">2025-04-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-04-17T01:30:16.000Z" title="更新于 2025-04-17 09:30:16">2025-04-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/armv8%E8%99%9A%E6%8B%9F%E5%8C%96/">armv8虚拟化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>9分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="armv8虚拟化扫盲"><a href="#armv8虚拟化扫盲" class="headerlink" title="armv8虚拟化扫盲"></a>armv8虚拟化扫盲</h1><h1 id="虚拟化概述"><a href="#虚拟化概述" class="headerlink" title="虚拟化概述"></a>虚拟化概述</h1><p>根据虚拟化实现方式不同，分为软件虚拟化和硬件虚拟化</p>
+<ol>
+<li><p>软件虚拟化</p>
+<ol>
+<li><a href="#20250416104446-gpi64tf">qemu</a></li>
+</ol>
+</li>
+<li><p>硬件虚拟化</p>
+<ol>
+<li><a href="#20250416112740-3ql3jdq">type1虚拟化</a>：xen+</li>
+<li><a href="#20250416112740-fvc6qui">type2虚拟化</a>：kvm</li>
+</ol>
+</li>
+<li><p><a href="#20250416113106-4wpawv8">半虚拟化</a></p>
+<ol>
+<li><a href="#20250416134925-id5wxrx">virtio+</a></li>
+</ol>
+</li>
+</ol>
+<h2 id="软件虚拟化之qemu"><a href="#软件虚拟化之qemu" class="headerlink" title="软件虚拟化之qemu"></a>软件虚拟化之qemu</h2><ul>
+<li>qemu也可以使用type2级别的硬件虚拟化配合，如果没有kvm硬件加速支持，qemu可以纯粹的软件虚拟化</li>
+</ul>
+<blockquote>
+<p>qemu采用TCG中间指令格式，将guest os的指令翻译成TCG指令，然后再将TGC指令翻译成host os的指令</p>
+</blockquote>
+<p><img src="/img/image-20250416110504-rq11a5n.png" alt="image" title="qemu大纲图"></p>
+<h2 id="硬件虚拟化"><a href="#硬件虚拟化" class="headerlink" title="硬件虚拟化"></a>硬件虚拟化</h2><h3 id="type1虚拟化"><a href="#type1虚拟化" class="headerlink" title="type1虚拟化"></a>type1虚拟化</h3><p>type1虚拟化是hypervisor直接运行到硬件上，管理所有的硬件资源和虚拟机，</p>
+<p>框图如下：</p>
+<p><img src="/img/image-20250416134107-wbpm68d.png" alt="image"></p>
+<blockquote>
+<p>这种方式存在一个问题，就是hypervisor需要实现所有设备驱动，开发工作大</p>
+</blockquote>
+<p>‍</p>
+<h3 id="type2虚拟化"><a href="#type2虚拟化" class="headerlink" title="type2虚拟化"></a>type2虚拟化</h3><p>type2虚拟化中的hypervisor运行在host os上，host os负责管理硬件资源，而hypervisor作为host os的组件</p>
+<p><img src="/img/image-20250416134115-8spl028.png" alt="image"></p>
+<p><strong>这种方式的问题是：</strong></p>
+<p>由于host os EL1和hypervisor EL2处于不同异常等级，需要通过异常方式实现系统调用，效率比type1低</p>
+<p><strong>解决方案：</strong></p>
+<p>目前armv8.1通过<a target="_blank" rel="noopener" href="https://searchvirtual.techtarget.com.cn/10-25332/" title="了解虚拟化硬件支持">vhe</a>扩展支持，<span data-type="text" style="background-color: var(--b3-font-background1);">使得host os和hypervisor都运行在EL2</span>，通过函数直接调用，提高了效率</p>
+<h3 id="半虚拟化"><a href="#半虚拟化" class="headerlink" title="半虚拟化"></a>半虚拟化</h3><ul>
+<li>提出原因：</li>
+</ul>
+<p>全虚拟化的guest os不需要修改任何代码，执行方式和真实硬件基本一致。但是涉及到IO操作每次都需要返回到hypervisor，效率较低</p>
+<ul>
+<li>解决方案：virtio+</li>
+</ul>
+<p>定义了guest os驱动与hypervisor中模拟设备之间的io数据通信协议，通过通道的方式管理它们之间的数据传输，从而避免了频繁的IO操作</p>
+<h1 id="armv8虚拟化实现支持"><a href="#armv8虚拟化实现支持" class="headerlink" title="armv8虚拟化实现支持"></a>armv8虚拟化实现支持</h1><p>虚拟化需要对：<a href="#20250416135735-tm2yg89">cpu</a> 内存 iO设备 中断控制器以及timer等提供虚拟化实现</p>
+<table>
+<thead>
+<tr>
+<th>虚拟化方面</th>
+<th>关键技术</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU 虚拟化</td>
+<td>EL2 异常等级、敏感指令捕获、虚拟寄存器</td>
+<td>解决特权操作模拟问题，提高性能</td>
+</tr>
+<tr>
+<td>内存虚拟化</td>
+<td>影子页表、两级页表、VMID</td>
+<td>解决内存地址转换问题，提高效率和性能</td>
+</tr>
+<tr>
+<td>IO 虚拟化</td>
+<td>设备地址模拟、缺页异常处理</td>
+<td>实现设备访问模拟</td>
+</tr>
+<tr>
+<td>DMA 虚拟化</td>
+<td>SMMU</td>
+<td>解决 DMA 地址转换问题</td>
+</tr>
+<tr>
+<td>中断虚拟化</td>
+<td>GICv3 虚拟中断注入</td>
+<td>简化中断注入流程，提高效率</td>
+</tr>
+<tr>
+<td>定时器虚拟化</td>
+<td>虚拟和物理定时器、计数器</td>
+<td>确定共享 CPU 下定时器触发时间</td>
+</tr>
+</tbody></table>
+<h2 id="cpu虚拟化"><a href="#cpu虚拟化" class="headerlink" title="cpu虚拟化"></a>cpu虚拟化</h2><p>armv8提供了4个异常等级，应用程序运行在EL0，guest os运行在EL1，hypervisor运行在EL2，图示如下：</p>
+<p><img src="/img/image-20250416140025-c2yltge.png" alt="image">​</p>
+<p>对于一般的指令，guest os无须陷入EL2，但是对于硬件状态相关的操作，仍需要陷入EL2进行处理，armv8提供了hcr_el2寄存器进行配置：</p>
+<h3 id="hcr-el2控制寄存器："><a href="#hcr-el2控制寄存器：" class="headerlink" title="hcr_el2控制寄存器："></a><span data-type="text" style="color: var(--b3-font-color1);">hcr_el2控制寄存器：</span></h3><p><img src="/img/image-20250416140927-j2e3qv5.png" alt="image"></p>
+<p> <strong>(a) 虚拟化基础配置</strong></p>
+<ul>
+<li><p><strong>VM (Virtualization MMU)</strong></p>
+<ul>
+<li>当置1时，启用<strong>第二阶段地址转换</strong>（Stage 2 Translation），即Hypervisor为VM提供独立的内存映射。</li>
+</ul>
+</li>
+<li><p><strong>RW (Register Width)</strong></p>
+<ul>
+<li><p>控制EL1的执行状态：</p>
+<ul>
+<li>​<code>RW=1</code>​：EL1运行在<strong>AArch64</strong>模式。</li>
+<li>​<code>RW=0</code>​：EL1运行在<strong>AArch32</strong>模式。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p> <strong>(b) 异常与中断路由</strong></p>
+<ul>
+<li><p><strong>TGE (Trap General Exceptions)</strong></p>
+<ul>
+<li><code>TGE=1</code>​时，EL0的所有异常（如系统寄存器访问）被路由到EL2。常用于容器化场景。</li>
+</ul>
+</li>
+<li><p><strong>IMO&#x2F;FMO&#x2F;AMO (Interrupt Routing)</strong></p>
+<ul>
+<li><strong>IMO&#x3D;1</strong>：将物理<strong>IRQ</strong>中断路由到EL2。</li>
+<li><strong>FMO&#x3D;1</strong>：将物理<strong>FIQ</strong>中断路由到EL2。</li>
+<li><strong>AMO&#x3D;1</strong>：将物理<strong>SError</strong>（系统错误）中断路由到EL2。</li>
+</ul>
+</li>
+<li><p><strong>VI&#x2F;VF (Virtual Interrupts)</strong></p>
+<ul>
+<li><strong>VI&#x3D;1</strong>：向VM注入<strong>虚拟IRQ</strong>中断。</li>
+<li><strong>VF&#x3D;1</strong>：向VM注入<strong>虚拟FIQ</strong>中断。</li>
+</ul>
+</li>
+</ul>
+<p> <strong>(c) 指令与操作捕获</strong></p>
+<ul>
+<li><p><strong>TIDCP (Trap ID Co-processor)</strong></p>
+<ul>
+<li>置1时，捕获EL1的某些缓存&#x2F;TLB维护指令（如<code>IC IVAU</code>​），陷入EL2处理，确保VM隔离性。</li>
+</ul>
+</li>
+<li><p><strong>DC (Data Cache Control)</strong></p>
+<ul>
+<li>控制数据缓存操作（如<code>DC CIVAC</code>​）是否被捕获。</li>
+</ul>
+</li>
+<li><p><strong>TID[0-4] (Trap ID Registers)</strong></p>
+<ul>
+<li><p>捕获对特定系统寄存器的访问。例如：</p>
+<ul>
+<li><strong>TID3&#x3D;1</strong>：捕获<code>CTR_EL0</code>​（缓存类型寄存器）的访问。</li>
+<li><strong>TID4&#x3D;1</strong>：捕获对调试寄存器的访问（如<code>MDSCR_EL1</code>​）。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p> <strong>(d) 内存与调试</strong></p>
+<ul>
+<li><p><strong>PTW (Protected Table Walk)</strong></p>
+<ul>
+<li>置1时，禁止页表遍历（Page Table Walk）使用非安全内存，增强安全性。</li>
+</ul>
+</li>
+<li><p><strong>TD (Trap Debug)</strong></p>
+<ul>
+<li>置1时，将EL1的调试事件（如断点）路由到EL2。</li>
+</ul>
+</li>
+</ul>
+<h3 id="系统寄存器捕获和虚拟寄存器支持"><a href="#系统寄存器捕获和虚拟寄存器支持" class="headerlink" title="系统寄存器捕获和虚拟寄存器支持"></a><strong>系统寄存器捕获和虚拟寄存器支持</strong></h3><p>部分系统寄存器在 hypervisor 和 guest os 视角不同，如 ID_AA64MMFR0_EL1。访问频率低的寄存器，hypervisor 捕获访问并提供虚拟值；访问频率高的寄存器，如为MIDR_EL1定义了VMIDR_EL2，为MPIDR_EL1定义了VMPIDR_EL2。hypervisor在切换到vcpu之前其值写入这些虚拟寄存器中，<u>当guest os访问MIDR_EL1时，其实际获取到的即为VMIDR_EL2中的值。通过以上方式，guest os对这类寄存器的访问将不再需要触发异常</u></p>
+<h3 id="vhe支持"><a href="#vhe支持" class="headerlink" title="vhe支持"></a>vhe支持</h3><p>vhe主要是为了支持在type2虚拟化下，<span data-type="text" style="background-color: var(--b3-card-success-background); color: var(--b3-card-success-color);">将host os和hypervisor都运行在EL2中</span>，以提高hypervisor和虚拟机之间的切换代价。其主要包含以下特性：</p>
+<p><strong>vhe提出原因：</strong> 在type2虚拟化中，对于没有vhe支持的armv8，host os运行在EL1，hypervisor运行在EL2，处于不同异常等级，切换效率较低</p>
+<p>vhe特性如下：</p>
+<ol>
+<li>增加了ttbr1_el2寄存器对ASDI<sup>(ASID是Address Space Identifier，每个进程拥有独立的虚拟地址空间，传统上下文切换需清空TLB（否则不同进程的地址映射会冲突）。ASID为每个进程分配唯一标识符，使TLB可同时缓存多个地址空间的条目，切换时仅需更新ASID，无需刷新整个TLB TTBR0_EL1 &#x3D; [物理页表基址] | (ASID &lt;&lt; 48) 进程切换时，仅仅需要更新TTBR0_EL1中的ASID，保留TLB缓存)</sup>支持：在不支持vhe情况下,ttbr0_el2映射地址范围较小。进程切换需要刷新TLB，导致开销</li>
+<li>寄存器重定向：硬件支持对EL1的访问重定向到EL2。</li>
+</ol>
+<p>如果需要访问真实的EL1寄存器，ARMv8.1引入了一种新的寄存器命名方式：通过_EL12后缀直接访问EL1寄存器，即使VHE已启用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">// 读取EL1的SCTLR寄存器</span><br><span class="line">MRS x0, SCTLR_EL1   // 会被重定向到SCTLR_EL2（若E2H=1）</span><br><span class="line">MRS x0, SCTLR_EL12  // 强制访问真实的EL1寄存器</span><br></pre></td></tr></table></figure>
+
+<h2 id="内存虚拟化"><a href="#内存虚拟化" class="headerlink" title="内存虚拟化"></a>内存虚拟化</h2><p>基本概念：</p>
+<p>（1）HVA（host virtual address）：host视角下的虚拟地址<br>（2）HPA（host physical address）：host视角下的物理地址<br>（3）GVA（guest virtual address）：guest视角下的虚拟地址<br>（4）GPA（guest physical address）：guest视角下的物理地址<br>（5）IPA（intermediate physical address）：它与gpa含义相同，是arm的对guest物理地址的一种命名方式</p>
+<h3 id="影子页表（hypervisor为每个vm中的每个进程都维护一张合并了GVA–-GPA和GPA–-HPA两级页表关系的shadow页表。当guest-os执行页表切换操作时，hypervisor将截获该操作，并用这张合并后的页表替换掉guest-os本身的页表。它就像影子一样覆盖掉了guest-os的页表，因此其被称为影子页表）"><a href="#影子页表（hypervisor为每个vm中的每个进程都维护一张合并了GVA–-GPA和GPA–-HPA两级页表关系的shadow页表。当guest-os执行页表切换操作时，hypervisor将截获该操作，并用这张合并后的页表替换掉guest-os本身的页表。它就像影子一样覆盖掉了guest-os的页表，因此其被称为影子页表）" class="headerlink" title="影子页表（hypervisor为每个vm中的每个进程都维护一张合并了GVA–&gt;GPA和GPA–&gt;HPA两级页表关系的shadow页表。当guest os执行页表切换操作时，hypervisor将截获该操作，并用这张合并后的页表替换掉guest os本身的页表。它就像影子一样覆盖掉了guest os的页表，因此其被称为影子页表）"></a>影子页表<sup>（hypervisor为每个vm中的每个进程都维护一张合并了GVA–&gt;GPA和GPA–&gt;HPA两级页表关系的shadow页表。当guest os执行页表切换操作时，hypervisor将截获该操作，并用这张合并后的页表替换掉guest os本身的页表。它就像影子一样覆盖掉了guest os的页表，因此其被称为影子页表）</sup></h3><p>对于<u>不支持硬件虚拟化</u>的系统，由于只有一个MMU，只能实现一级的VA-&gt;PA转换，无法直接实现</p>
+<blockquote>
+<p>影子页表开销较大，为此硬件引入2级页表，通过1级GVA-&gt;GPA转换，二级页表完成GPA-&gt;HPA转换</p>
+</blockquote>
+<h3 id="armv8两级页表"><a href="#armv8两级页表" class="headerlink" title="armv8两级页表"></a>armv8两级页表</h3><p>armv8 两级页表中，第一级页表由 guest os 创建用于 GVA-&gt;GPA（IPA）转换，第二级由 hypervisor 创建用于 GPA（IPA）-&gt;HPA 转换。armv8 为每个虚拟机提供 VMID，提高虚拟机切换效率和性能，页表转换时选择两级页表中访问限制更严格的属性</p>
+<table>
+<thead>
+<tr>
+<th><strong>特性</strong></th>
+<th><strong>Stage 1（阶段1转换）</strong></th>
+<th><strong>Stage 2（阶段2转换）</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>作用对象</strong></td>
+<td>虚拟机（VM）内部的进程</td>
+<td>虚拟机（VM）本身</td>
+</tr>
+<tr>
+<td><strong>输入地址 → 输出地址</strong></td>
+<td>虚拟地址（VA）→ <strong>中间物理地址（IPA）</strong></td>
+<td>中间物理地址（IPA）→ <strong>实际物理地址（PA）</strong></td>
+</tr>
+<tr>
+<td><strong>管理者</strong></td>
+<td>VM的操作系统（EL1）</td>
+<td>Hypervisor（EL2）</td>
+</tr>
+<tr>
+<td><strong>目的</strong></td>
+<td>隔离VM内的进程内存空间</td>
+<td>隔离不同VM的物理内存空间</td>
+</tr>
+<tr>
+<td><strong>启用条件</strong></td>
+<td>默认启用（由MMU控制）</td>
+<td>需设置<code>HCR_EL2.VM=1</code>​启用</td>
+</tr>
+<tr>
+<td><strong>页表寄存器</strong></td>
+<td>​<code>TTBR0_EL1</code>​&#x2F;<code>TTBR1_EL1</code>​（VM内）</td>
+<td>​<code>VTTBR_EL2</code>​（Hypervisor设置）</td>
+</tr>
+<tr>
+<td><strong>TLB标识</strong></td>
+<td>使用<strong>ASID</strong>区分进程</td>
+<td>使用<strong>VMID</strong>区分虚拟机</td>
+</tr>
+</tbody></table>
+<h3 id="IO虚拟化"><a href="#IO虚拟化" class="headerlink" title="IO虚拟化"></a>IO虚拟化</h3><p>虚拟机需模拟外设地址空间，对于物理地址，为 IPA 分配物理页框并建立 stage 2 页表；对于共享设备，hypervisor 截获 IO 访问操作并模拟设备功能，通过不创建 IO 空间的 stage 2 页表产生缺页异常实现。</p>
+<p>hypervisor捕获到缺页异常后，就可以根据HPFAR_EL2寄存器获取引起异常的地址，并根据ESR_EL2获取产生异常的原因，最后根据这些信息执行实际的设备模拟流程。以下为其流程图：</p>
+<p><img src="/img/image-20250416154356-0ai9zg8.png" alt="image"></p>
+<h3 id="DMA虚拟化"><a href="#DMA虚拟化" class="headerlink" title="DMA虚拟化"></a>DMA虚拟化</h3><p>DMA 操作以 IPA 地址为源和目的地址会出错，无硬件扩展时，hypervisor 截获 DMA 地址设置操作并分配物理内存；引入 SMMU <sup>( SMMU的核心功能 地址转换：将设备发起的DMA请求中的虚拟地址（IOVA）转换为物理地址（PA），支持多级页表。 访问控制：检查设备对内存区域的读写权限，防止非法访问。 中断重映射：将设备中断路由到正确的虚拟机或Hypervisor。)</sup>后，hypervisor 为 DMA 创建 SMMU 页表实现内存访问</p>
+<h2 id="中断虚拟化"><a href="#中断虚拟化" class="headerlink" title="中断虚拟化"></a>中断虚拟化</h2><p>无硬件支持时，虚拟机模拟虚拟中断控制器处理中断。GICv3 在硬件层面提供虚拟中断注入功能，包括一组 list register 寄存器、vIRQ 和 vFIQ 中断信号、虚拟 cpu interface 寄存器。</p>
+<p>有硬件支持后，hypervisor 模拟虚拟 distributor 和 redistributor，由于虚拟cpu interface已经由硬件支持，因此不再需要hypervisor模拟。hypervisor捕获物理中断注入虚拟中断，调度 vcpu 运行。</p>
+<p><strong>中断路由</strong>：</p>
+<ul>
+<li><p><strong>IMO&#x2F;FMO&#x2F;AMO</strong>：控制物理中断类型（IRQ&#x2F;FIQ&#x2F;SError）是否路由到EL2。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">HCR_EL2.IMO = <span class="number">1</span>;  <span class="comment">// 物理IRQ路由到EL2</span></span><br><span class="line">HCR_EL2.FMO = <span class="number">0</span>;  <span class="comment">// 物理FIQ由VM直接处理</span></span><br></pre></td></tr></table></figure></li>
+<li><p><strong>VI&#x2F;VF</strong>：向VM注入虚拟中断。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">HCR_EL2.VI = <span class="number">1</span>;   <span class="comment">// 注入虚拟IRQ到VM</span></span><br><span class="line">HCR_EL2.VF = <span class="number">0</span>;   <span class="comment">// 不注入虚拟FIQ</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="定时器虚拟化"><a href="#定时器虚拟化" class="headerlink" title="定时器虚拟化"></a>定时器虚拟化</h2><p>armv8 每个 CPU 有 generic timer 定时器，虚拟化后物理 CPU 被 vcpu 共享，定时器触发存在问题。armv8 提供虚拟和物理定时器及计数器，虚拟计数器有与物理计数器的 offset 偏移值，由 hypervisor 设置，以此确定定时器触发时间。</p>
+<h3 id="ARMv8定时器硬件基础"><a href="#ARMv8定时器硬件基础" class="headerlink" title="ARMv8定时器硬件基础"></a><strong>ARMv8定时器硬件基础</strong></h3><p>ARMv8的通用定时器（Generic Timer）为每个CPU核心提供以下关键组件：</p>
+<ul>
+<li><p><strong>系统计数器（System Counter）</strong> ：全局递增的64位计数器，频率固定（如1GHz）。</p>
+</li>
+<li><p><strong>物理定时器（Physical Timer）</strong> ：基于系统计数器的比较寄存器（<code>CNTP_CVAL_EL0</code>​）和控制寄存器（<code>CNTP_CTL_EL0</code>​）。</p>
+</li>
+<li><p><strong>虚拟定时器（Virtual Timer）</strong> ：专为虚拟化设计，基于 <strong>CNTVOFF_EL2</strong> 的偏移值，提供虚拟机独立的计时视图。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">虚拟时间 = 系统计数器值 - CNTVOFF_EL2</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>‍</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">凌福义</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/post/armv8-virtualization-lyrics-zjg15p.html">http://example.com/post/armv8-virtualization-lyrics-zjg15p.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">凌福义's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/armv8%E8%99%9A%E6%8B%9F%E5%8C%96/">armv8虚拟化</a><a class="post-meta__tags" href="/tags/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/">cpu虚拟化</a><a class="post-meta__tags" href="/tags/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/">内存虚拟化</a><a class="post-meta__tags" href="/tags/nvhe/">nvhe</a><a class="post-meta__tags" href="/tags/vhe/">vhe</a></div><div class="post-share"><div class="social-share" data-image="https://images.tpointtech.com/cloudpages/images/cloud-hypervisor.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/post/linux-network-source-code-learning----overall-introduction-zwrbs8.html" title="Linux网络源代码学习——整体介绍"><img class="cover" src="https://cdn.pixabay.com/photo/2018/07/14/11/32/network-3537400_640.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Linux网络源代码学习——整体介绍</div></div><div class="info-2"><div class="info-item-1">Linux网络源代码学习——整体介绍 简介 源码目录 网络分层 网络与文件操作 数据结构 sk_buff结构 网络协议栈实现——数据struct 和 协议struct   面向过程&#x2F;对象&#x2F;ioc 其它  以下来自linux1.2.13源码。linux的网络部分由网卡的驱动程序和kernel的网络协议栈部分组成，它们相互交互，完成数据的接收和发送。 源码目录1234567891011121314151617linux-1.2.13||---net        |        |---protocols.c        |---socket.c        |---unix        |	     |        |	     |---proc.c        |	     |---sock.c        |	     |---unix.h        |---inet                |                |---af_inet.c                |---arp.h,arp.c          ...</div></div></div></a><a class="pagination-related" href="/posts/undefined/" title="rCore chapter3 多道程序分时系统任务"><img class="cover" src="/img/images_20250414141052.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">rCore chapter3 多道程序分时系统任务</div></div><div class="info-2"><div class="info-item-1">rCore chapter3 多道程序分时系统任务这一章在之前的章节中更进一步, 实现了任务调度的功能, 也就是任务不再是之前的批处理系统那样一个接一个地运行, 而是受到 OS 的调度。为了实现这一目标， 本章实现了下面的功能或机制：  将应用程序加载到不同的内存位置， 并且同时存在于内存中 内核添加上下文相关的数据结构，存储应用调度时的上下文信息，基于这些数据结构实现上下文切换函数 通过时钟中断实现抢占式调度  官方文档：https://learningos.cn/rCore-Camp-Guide-2025S/chapter3/index.html 1 应用程序数据结构1.1 应用程序加载位置这一过程相比之前的章节变化很小，就是将不同的应用程序链接到了操作系统的不同的位置，应用程序加载的位置是一个基址加上指定的偏移量。 1.2 应用程序的栈这一由于我们需要实现任务的切换，应用程序运行的 **上下文 **包括了各种寄存器、函数调用栈等，...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="gitalk-container"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#armv8%E8%99%9A%E6%8B%9F%E5%8C%96%E6%89%AB%E7%9B%B2"><span class="toc-number">1.</span> <span class="toc-text">armv8虚拟化扫盲</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%8C%96%E6%A6%82%E8%BF%B0"><span class="toc-number">2.</span> <span class="toc-text">虚拟化概述</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BD%AF%E4%BB%B6%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B9%8Bqemu"><span class="toc-number">2.1.</span> <span class="toc-text">软件虚拟化之qemu</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">2.2.</span> <span class="toc-text">硬件虚拟化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#type1%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">2.2.1.</span> <span class="toc-text">type1虚拟化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#type2%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">2.2.2.</span> <span class="toc-text">type2虚拟化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%8A%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">2.2.3.</span> <span class="toc-text">半虚拟化</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#armv8%E8%99%9A%E6%8B%9F%E5%8C%96%E5%AE%9E%E7%8E%B0%E6%94%AF%E6%8C%81"><span class="toc-number">3.</span> <span class="toc-text">armv8虚拟化实现支持</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#cpu%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">3.1.</span> <span class="toc-text">cpu虚拟化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#hcr-el2%E6%8E%A7%E5%88%B6%E5%AF%84%E5%AD%98%E5%99%A8%EF%BC%9A"><span class="toc-number">3.1.1.</span> <span class="toc-text">hcr_el2控制寄存器：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E5%AF%84%E5%AD%98%E5%99%A8%E6%8D%95%E8%8E%B7%E5%92%8C%E8%99%9A%E6%8B%9F%E5%AF%84%E5%AD%98%E5%99%A8%E6%94%AF%E6%8C%81"><span class="toc-number">3.1.2.</span> <span class="toc-text">系统寄存器捕获和虚拟寄存器支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#vhe%E6%94%AF%E6%8C%81"><span class="toc-number">3.1.3.</span> <span class="toc-text">vhe支持</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">3.2.</span> <span class="toc-text">内存虚拟化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BD%B1%E5%AD%90%E9%A1%B5%E8%A1%A8%EF%BC%88hypervisor%E4%B8%BA%E6%AF%8F%E4%B8%AAvm%E4%B8%AD%E7%9A%84%E6%AF%8F%E4%B8%AA%E8%BF%9B%E7%A8%8B%E9%83%BD%E7%BB%B4%E6%8A%A4%E4%B8%80%E5%BC%A0%E5%90%88%E5%B9%B6%E4%BA%86GVA%E2%80%93-GPA%E5%92%8CGPA%E2%80%93-HPA%E4%B8%A4%E7%BA%A7%E9%A1%B5%E8%A1%A8%E5%85%B3%E7%B3%BB%E7%9A%84shadow%E9%A1%B5%E8%A1%A8%E3%80%82%E5%BD%93guest-os%E6%89%A7%E8%A1%8C%E9%A1%B5%E8%A1%A8%E5%88%87%E6%8D%A2%E6%93%8D%E4%BD%9C%E6%97%B6%EF%BC%8Chypervisor%E5%B0%86%E6%88%AA%E8%8E%B7%E8%AF%A5%E6%93%8D%E4%BD%9C%EF%BC%8C%E5%B9%B6%E7%94%A8%E8%BF%99%E5%BC%A0%E5%90%88%E5%B9%B6%E5%90%8E%E7%9A%84%E9%A1%B5%E8%A1%A8%E6%9B%BF%E6%8D%A2%E6%8E%89guest-os%E6%9C%AC%E8%BA%AB%E7%9A%84%E9%A1%B5%E8%A1%A8%E3%80%82%E5%AE%83%E5%B0%B1%E5%83%8F%E5%BD%B1%E5%AD%90%E4%B8%80%E6%A0%B7%E8%A6%86%E7%9B%96%E6%8E%89%E4%BA%86guest-os%E7%9A%84%E9%A1%B5%E8%A1%A8%EF%BC%8C%E5%9B%A0%E6%AD%A4%E5%85%B6%E8%A2%AB%E7%A7%B0%E4%B8%BA%E5%BD%B1%E5%AD%90%E9%A1%B5%E8%A1%A8%EF%BC%89"><span class="toc-number">3.2.1.</span> <span class="toc-text">影子页表（hypervisor为每个vm中的每个进程都维护一张合并了GVA–&gt;GPA和GPA–&gt;HPA两级页表关系的shadow页表。当guest os执行页表切换操作时，hypervisor将截获该操作，并用这张合并后的页表替换掉guest os本身的页表。它就像影子一样覆盖掉了guest os的页表，因此其被称为影子页表）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#armv8%E4%B8%A4%E7%BA%A7%E9%A1%B5%E8%A1%A8"><span class="toc-number">3.2.2.</span> <span class="toc-text">armv8两级页表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IO%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">3.2.3.</span> <span class="toc-text">IO虚拟化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#DMA%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">3.2.4.</span> <span class="toc-text">DMA虚拟化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">3.3.</span> <span class="toc-text">中断虚拟化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E6%97%B6%E5%99%A8%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="toc-number">3.4.</span> <span class="toc-text">定时器虚拟化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ARMv8%E5%AE%9A%E6%97%B6%E5%99%A8%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80"><span class="toc-number">3.4.1.</span> <span class="toc-text">ARMv8定时器硬件基础</span></a></li></ol></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(/img/index.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2025 By 凌福义</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><div class="js-pjax"><script>(() => {
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = `%%{init:{ 'theme':'${theme}'}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+
+  const commentCount = n => {
+    const isCommentCount = document.querySelector('#post-meta .gitalk-comment-count')
+    if (isCommentCount) {
+      isCommentCount.textContent= n
+    }
+  }
+
+  const initGitalk = (el, path) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGitalk = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const gitalk = new Gitalk({
+      clientID: 'Ov23liB0A7BBj4K7Insh',
+      clientSecret: '4b3759f76009e031f06be67e415b18c149a2d910',
+      repo: 'lingfuyi.github.io',
+      owner: 'lingfuyi',
+      admin: ['lingfuyi'],
+      updateCountCallback: commentCount,
+      ...option,
+      id: isShuoshuo ? path : (option && option.id) || '1899549ba925252976ed4ca59b432dee'
+    })
+
+    gitalk.render('gitalk-container')
+  }
+
+  const loadGitalk = async(el, path) => {
+    if (typeof Gitalk === 'function') initGitalk(el, path)
+    else {
+      await btf.getCSS('https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css')
+      await btf.getScript('https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js')
+      initGitalk(el, path)
+    }
+  }
+
+  if (isShuoshuo) {
+    'Gitalk' === 'Gitalk'
+      ? window.shuoshuoComment = { loadComment: loadGitalk }
+      : window.loadOtherComment = loadGitalk
+    return
+  }
+
+  if ('Gitalk' === 'Gitalk' || !false) {
+    if (false) btf.loadComment(document.getElementById('gitalk-container'), loadGitalk)
+    else loadGitalk()
+  } else {
+    window.loadOtherComment = loadGitalk
+  }
+})()</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
